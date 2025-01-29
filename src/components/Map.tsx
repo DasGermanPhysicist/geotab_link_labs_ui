@@ -48,10 +48,28 @@ export function Map({ center, markers }: MapProps) {
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  const formatCoordinate = (coord: number | undefined | null): string => {
+    if (typeof coord !== 'number' || isNaN(coord)) {
+      return '0.0000';
+    }
+    return coord.toFixed(4);
+  };
+
+  const isValidPosition = (position: LatLngTuple): boolean => {
+    return Array.isArray(position) && 
+           position.length === 2 && 
+           typeof position[0] === 'number' && 
+           typeof position[1] === 'number' && 
+           !isNaN(position[0]) && 
+           !isNaN(position[1]);
+  };
+
+  const validMarkers = markers.filter(marker => isValidPosition(marker.position));
+
   return (
     <div className="relative h-full">
       <MapContainer 
-        center={center} 
+        center={isValidPosition(center) ? center : [0, 0]} 
         zoom={13} 
         style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
       >
@@ -59,7 +77,7 @@ export function Map({ center, markers }: MapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {markers.map((marker, index) => (
+        {validMarkers.map((marker, index) => (
           <Marker 
             key={index} 
             position={marker.position}
@@ -77,7 +95,7 @@ export function Map({ center, markers }: MapProps) {
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="text-gray-600">Location:</span>{' '}
-                    {marker.position[0].toFixed(4)}°N, {marker.position[1].toFixed(4)}°W
+                    {formatCoordinate(marker.position[0])}°N, {formatCoordinate(marker.position[1])}°W
                   </div>
                   <div>
                     <span className="text-gray-600">Last Update:</span> {marker.lastUpdate}
@@ -127,7 +145,7 @@ export function Map({ center, markers }: MapProps) {
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <span className="text-gray-600">Location:</span>{' '}
-                {selectedMarker.position[0].toFixed(4)}°N, {selectedMarker.position[1].toFixed(4)}°W
+                {formatCoordinate(selectedMarker.position[0])}°N, {formatCoordinate(selectedMarker.position[1])}°W
               </div>
               <div>
                 <span className="text-gray-600">Last Update:</span> {selectedMarker.lastUpdate}
