@@ -44,27 +44,50 @@ interface MapProps {
   markers: MapMarker[];
 }
 
+// Helper functions defined before the component
+const formatCoordinate = (coord: number | undefined | null): string => {
+  if (typeof coord !== 'number' || isNaN(coord)) {
+    return '0.0000';
+  }
+  return coord.toFixed(4);
+};
+
+const isValidPosition = (position: LatLngTuple): boolean => {
+  return Array.isArray(position) && 
+         position.length === 2 && 
+         typeof position[0] === 'number' && 
+         typeof position[1] === 'number' && 
+         !isNaN(position[0]) && 
+         !isNaN(position[1]) &&
+         position[0] >= -90 && position[0] <= 90 && // Valid latitude range
+         position[1] >= -180 && position[1] <= 180; // Valid longitude range
+};
+
 export function Map({ center, markers }: MapProps) {
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [showModal, setShowModal] = useState(false);
 
-  const formatCoordinate = (coord: number | undefined | null): string => {
-    if (typeof coord !== 'number' || isNaN(coord)) {
-      return '0.0000';
-    }
-    return coord.toFixed(4);
-  };
-
-  const isValidPosition = (position: LatLngTuple): boolean => {
-    return Array.isArray(position) && 
-           position.length === 2 && 
-           typeof position[0] === 'number' && 
-           typeof position[1] === 'number' && 
-           !isNaN(position[0]) && 
-           !isNaN(position[1]);
-  };
+  // Add debugging logs
+  console.log('Map component - center:', center);
+  console.log('Map component - markers:', markers);
+  console.log('Map component - valid markers:', markers.filter(marker => isValidPosition(marker.position)));
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
+
+  // Add more detailed validation logging
+  if (validMarkers.length === 0) {
+    console.warn('No valid markers found. Validation details:');
+    markers.forEach((marker, index) => {
+      console.log(`Marker ${index}:`, {
+        position: marker.position,
+        isArray: Array.isArray(marker.position),
+        length: marker.position?.length,
+        lat: marker.position?.[0],
+        lng: marker.position?.[1],
+        isValid: isValidPosition(marker.position)
+      });
+    });
+  }
 
   return (
     <div className="relative h-full">

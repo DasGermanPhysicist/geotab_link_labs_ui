@@ -71,7 +71,10 @@ function App() {
     return tags
       .filter(tag => tag.latitude != null && tag.longitude != null)
       .map(tag => ({
-        position: [tag.latitude!, tag.longitude!] as LatLngTuple,
+        position: [
+          Number(tag.latitude!), 
+          Number(tag.longitude!)
+        ] as LatLngTuple,
         name: tag.name,
         type: getTagType(tag.registrationToken),
         temperature: tag.fahrenheit,
