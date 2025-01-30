@@ -42,13 +42,15 @@ export interface BLEAsset {
   battery: number;
 }
 
+// Define tag type constants
 export const TagTypes = {
   SUPERTAG: 'D29B3BE8F2CC9A1A7051',
   DOOR_SENSOR: '61697266696E64657200',
   TEMPERATURE: '150285A4E29B7856C7CC'
 } as const;
 
-export function getTagType(registrationToken: string) {
+// Function to get the type of tag based on registration token
+export function getTagType(registrationToken: string): string {
   switch (registrationToken) {
     case TagTypes.SUPERTAG:
       return 'SuperTag';
@@ -103,10 +105,9 @@ export async function login({ username, password }: LoginCredentials): Promise<b
 export async function fetchOrganizations(): Promise<Organization[]> {
   try {
     const response = await api.get('/networkAsset/airfinder/organizations');
-    console.log('Raw organizations response:', response.data); // Debug log
     return response.data.map((org: any) => ({
       id: org.id || '',
-      name: org.value || org.name || 'Unnamed Organization' // Use value field first, then fall back to name
+      name: org.value || org.name || 'Unnamed Organization'
     }));
   } catch (error) {
     console.error('Failed to fetch organizations:', error);
@@ -117,10 +118,9 @@ export async function fetchOrganizations(): Promise<Organization[]> {
 export async function fetchSites(organizationId: string): Promise<Site[]> {
   try {
     const response = await api.get(`/networkAsset/airfinder/organization/${organizationId}/sites`);
-    console.log('Raw sites response:', response.data); // Debug log
     return response.data.map((site: any) => ({
       id: site.id || '',
-      name: site.value || site.name || site.siteName || 'Unnamed Site' // Try all possible name fields
+      name: site.value || site.name || site.siteName || 'Unnamed Site'
     }));
   } catch (error) {
     console.error('Failed to fetch sites:', error);
