@@ -29,7 +29,15 @@ interface ProcessedMarker {
   macAddress: string;
   registrationToken: string;
   nodeAddress: string;
+  chargeState?: 'not_charging' | 'charge_done' | 'charging' | null;
+  batteryCapacity_mAh?: number | string;
 }
+
+const is470mAhBattery = (capacity: number | string | undefined): boolean => {
+  if (capacity === undefined) return false;
+  const numericCapacity = typeof capacity === 'string' ? parseFloat(capacity) : capacity;
+  return numericCapacity === 470 || numericCapacity === 470.0;
+};
 
 function App() {
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
@@ -93,6 +101,8 @@ function App() {
       leashedToSuperTag: findSuperTagName(tag.sourceSupertagId),
       nodeAddress: tag.nodeAddress,
       registrationToken: tag.registrationToken,
+      chargeState: tag.chargeState,
+      batteryCapacity_mAh: tag.batteryCapacity_mAh
     }));
   }, [tags]);
 
@@ -427,13 +437,26 @@ function App() {
                               : 'text-[#87B812]'
                             }`} 
                           />
-                          <span className={`text-sm ${
-                            asset.battery.status === 'Low' ? 'text-orange-600' : 'text-gray-600'
-                          }`}>
-                            {asset.battery.status === 'Low' ? 'Low' : 
-                             asset.battery.level !== null ? `${asset.battery.level}%` : 
-                             asset.battery.status}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className={`text-sm ${
+                              asset.battery.status === 'Low' ? 'text-orange-600' : 'text-gray-600'
+                            }`}>
+                              {asset.battery.status === 'Low' ? 'Low' : 
+                               asset.battery.level !== null ? `${asset.battery.level}%` : 
+                               asset.battery.status}
+                            </span>
+                            {is470mAhBattery(asset.batteryCapacity_mAh) && asset.chargeState && (
+                              <span className={`text-xs ${
+                                asset.chargeState === 'charging' ? 'text-green-500' :
+                                asset.chargeState === 'charge_done' ? 'text-[#87B812]' :
+                                'text-gray-500'
+                              }`}>
+                                {asset.chargeState === 'charging' ? 'Charging' :
+                                 asset.chargeState === 'charge_done' ? 'Fully Charged' :
+                                 'Not Charging'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Thermometer className={`w-4 h-4 ${
