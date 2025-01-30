@@ -3,11 +3,9 @@ import { LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Battery, Wifi, WifiOff, Tag, X, ChevronRight } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-
-// Fix for default marker icons in React Leaflet
 import L from 'leaflet';
 
 // Create custom colored marker icon
@@ -52,24 +50,17 @@ const createClusterCustomIcon = function (cluster: any) {
   });
 };
 
-interface BLEAsset {
-  name: string;
-  type: string;
-  connected: boolean;
-  connectionDate: string;
-  leashedTime: string;
-  lastUpdate: string;
-  battery: number;
-}
-
 interface MapMarker {
   position: LatLngTuple;
   name: string;
   type: string;
   temperature: number;
-  battery: number;
+  battery: {
+    status: 'OK' | 'Low';
+    level: number | null;
+  };
   lastUpdate: string;
-  bleAssets: BLEAsset[];
+  bleAssets: any[];
 }
 
 interface MapProps {
@@ -78,7 +69,6 @@ interface MapProps {
   zoom?: number;
 }
 
-// Helper functions defined before the component
 const formatCoordinate = (coord: number | undefined | null): string => {
   if (typeof coord !== 'number' || isNaN(coord)) {
     return '0.0000';
@@ -93,20 +83,24 @@ const isValidPosition = (position: LatLngTuple): boolean => {
          typeof position[1] === 'number' && 
          !isNaN(position[0]) && 
          !isNaN(position[1]) &&
-         position[0] >= -90 && position[0] <= 90 && // Valid latitude range
-         position[1] >= -180 && position[1] <= 180; // Valid longitude range
+         position[0] >= -90 && position[0] <= 90 &&
+         position[1] >= -180 && position[1] <= 180;
 };
 
-// Add this new component to handle map view updates
 function MapUpdater({ center, zoom }: { center: LatLngTuple; zoom: number }) {
   const map = useMap();
   
   useEffect(() => {
-    if (isValidPosition(center)) {
-      map.flyTo(center, zoom, {
-        duration: 1.5,
-        easeLinearity: 0.25
-      });
+    if (map && isValidPosition(center)) {
+      try {
+        map.setView(center, zoom, {
+          animate: true,
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      } catch (error) {
+        console.error('Error updating map view:', error);
+      }
     }
   }, [map, center, zoom]);
 
@@ -118,8 +112,31 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
   const [showModal, setShowModal] = useState(false);
   const [showClusterModal, setShowClusterModal] = useState(false);
   const [clusterMarkers, setClusterMarkers] = useState<MapMarker[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
+  const defaultCenter: LatLngTuple = [0, 0];
+  const validCenter = isValidPosition(center) ? center : defaultCenter;
+
+  const handleMapReady = useCallback(() => {
+    setMapReady(true);
+  }, []);
+
+  const getBatteryDisplay = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
+    if (!battery) return 'Unknown';
+    if (battery.status === 'Low') return 'Low';
+    return battery.level !== null ? `${battery.level}%` : battery.status;
+  };
+
+  const getBatteryColor = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
+    if (!battery) return 'text-gray-400';
+    if (battery.status === 'Low') return 'text-orange-500';
+    if (battery.level !== null) {
+      return battery.level <= 20 ? 'text-orange-500' : 
+             battery.level <= 50 ? 'text-yellow-500' : 'text-[#87B812]';
+    }
+    return 'text-[#87B812]';
+  };
 
   const handleClusterClick = (cluster: any) => {
     const markers = cluster.getAllChildMarkers().map((marker: any) => marker.options.marker);
@@ -130,106 +147,108 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
   return (
     <div className="relative h-full">
       <MapContainer 
-        center={isValidPosition(center) ? center : [0, 0]} 
+        center={validCenter}
         zoom={zoom} 
         style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
+        whenReady={handleMapReady}
       >
-        <MapUpdater center={center} zoom={zoom} />
-        
-        <LayersControl position="topright">
-          {/* OpenStreetMap (Default) */}
-          <LayersControl.BaseLayer checked name="Street">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-          </LayersControl.BaseLayer>
+        {mapReady && (
+          <>
+            <MapUpdater center={validCenter} zoom={zoom} />
+            
+            <LayersControl position="topright">
+              <LayersControl.BaseLayer checked name="Street">
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+              </LayersControl.BaseLayer>
 
-          {/* Terrain View */}
-          <LayersControl.BaseLayer name="Terrain">
-            <TileLayer
-              attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
-              url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-              maxZoom={17}
-            />
-          </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="Terrain">
+                <TileLayer
+                  attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                  url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                  maxZoom={17}
+                />
+              </LayersControl.BaseLayer>
 
-          {/* Satellite View */}
-          <LayersControl.BaseLayer name="Satellite">
-            <TileLayer
-              attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={19}
-            />
-          </LayersControl.BaseLayer>
-        </LayersControl>
+              <LayersControl.BaseLayer name="Satellite">
+                <TileLayer
+                  attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                  maxZoom={19}
+                />
+              </LayersControl.BaseLayer>
+            </LayersControl>
 
-        <MarkerClusterGroup
-          chunkedLoading
-          iconCreateFunction={createClusterCustomIcon}
-          maxClusterRadius={60}
-          spiderfyOnMaxZoom={true}
-          showCoverageOnHover={false}
-          eventHandlers={{
-            clusterclick: (e) => {
-              handleClusterClick(e.layer);
-            }
-          }}
-        >
-          {validMarkers.map((marker, index) => (
-            <Marker 
-              key={index} 
-              position={marker.position}
-              icon={CustomIcon}
+            <MarkerClusterGroup
+              chunkedLoading
+              iconCreateFunction={createClusterCustomIcon}
+              maxClusterRadius={60}
+              spiderfyOnMaxZoom={true}
+              showCoverageOnHover={false}
               eventHandlers={{
-                click: () => {
-                  setSelectedMarker(marker);
-                  setShowModal(true);
+                clusterclick: (e) => {
+                  handleClusterClick(e.layer);
                 }
               }}
-              marker={marker}
             >
-              <Popup>
-                <div className="p-2 min-w-[250px]">
-                  <h3 className="font-semibold text-lg mb-2">{marker.name}</h3>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-gray-600">Location:</span>{' '}
-                      {formatCoordinate(marker.position[0])}°N, {formatCoordinate(marker.position[1])}°W
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Last Update:</span> {marker.lastUpdate}
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Temperature:</span> {marker.temperature}°F
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600">Battery:</span>
-                      <Battery className={`w-4 h-4 ${marker.battery > 50 ? 'text-green-500' : 'text-orange-500'}`} />
-                      {marker.battery}%
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Leashed Assets:</span> {marker.bleAssets.length}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+              {validMarkers.map((marker, index) => (
+                <Marker 
+                  key={index} 
+                  position={marker.position}
+                  icon={CustomIcon}
+                  eventHandlers={{
+                    click: () => {
                       setSelectedMarker(marker);
                       setShowModal(true);
-                    }}
-                    className="mt-3 w-full bg-[#87B812] text-white px-3 py-1.5 rounded-md hover:bg-[#769f10] transition-colors"
-                  >
-                    View Details
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MarkerClusterGroup>
+                    }
+                  }}
+                  marker={marker}
+                >
+                  <Popup>
+                    <div className="p-2 min-w-[250px]">
+                      <h3 className="font-semibold text-lg mb-2">{marker.name}</h3>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-gray-600">Location:</span>{' '}
+                          {formatCoordinate(marker.position[0])}°N, {formatCoordinate(marker.position[1])}°W
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Last Update:</span> {marker.lastUpdate}
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Temperature:</span> {marker.temperature}°F
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">Battery:</span>
+                          <Battery className={`w-4 h-4 ${getBatteryColor(marker.battery)}`} />
+                          {getBatteryDisplay(marker.battery)}
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Leashed Assets:</span> {marker.bleAssets.length}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMarker(marker);
+                          setShowModal(true);
+                        }}
+                        className="mt-3 w-full bg-[#87B812] text-white px-3 py-1.5 rounded-md hover:bg-[#769f10] transition-colors"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MarkerClusterGroup>
+          </>
+        )}
       </MapContainer>
 
-      {/* Cluster Modal */}
+      {/* Modals */}
       {showClusterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
@@ -267,8 +286,8 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                     
                     <div className="grid grid-cols-3 gap-4 mt-3">
                       <div className="flex items-center gap-2">
-                        <Battery className={`w-4 h-4 ${marker.battery > 50 ? 'text-green-500' : 'text-orange-500'}`} />
-                        <span className="text-sm text-gray-600">{marker.battery}%</span>
+                        <Battery className={`w-4 h-4 ${getBatteryColor(marker.battery)}`} />
+                        <span className="text-sm text-gray-600">{getBatteryDisplay(marker.battery)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">{marker.temperature}°F</span>
@@ -291,7 +310,6 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
         </div>
       )}
 
-      {/* Single Marker Modal */}
       {showModal && selectedMarker && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-4">
@@ -318,8 +336,8 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">Battery:</span>
-                <Battery className={`w-4 h-4 ${selectedMarker.battery > 50 ? 'text-green-500' : 'text-orange-500'}`} />
-                {selectedMarker.battery}%
+                <Battery className={`w-4 h-4 ${getBatteryColor(selectedMarker.battery)}`} />
+                {getBatteryDisplay(selectedMarker.battery)}
               </div>
             </div>
 
@@ -357,8 +375,8 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                       {asset.lastUpdate}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Battery className={`w-4 h-4 ${asset.battery > 50 ? 'text-green-500' : 'text-orange-500'}`} />
-                      {asset.battery}%
+                      <Battery className={`w-4 h-4 ${getBatteryColor(asset.battery)}`} />
+                      {getBatteryDisplay(asset.battery)}
                     </div>
                   </div>
                 </div>

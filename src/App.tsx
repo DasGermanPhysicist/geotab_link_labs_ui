@@ -4,7 +4,7 @@ import { Map } from './components/Map';
 import { BLEAssetsList } from './components/BLEAssetsList';
 import { LoginScreen } from './components/LoginScreen';
 import { OrgSiteSelector } from './components/OrgSiteSelector';
-import { fetchTags, isAuthenticated, Tag, getTagType, calculateBatteryPercentage, TagTypes } from './lib/api';
+import { fetchTags, isAuthenticated, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
@@ -15,7 +15,10 @@ type AssetViewType = 'all' | 'supertags' | 'sensors';
 interface ProcessedMarker {
   name: string;
   type: string;
-  battery: number;
+  battery: {
+    status: 'OK' | 'Low';
+    level: number | null;
+  };
   temperature: number | null;
   lastUpdate: string;
   position: LatLngTuple;
@@ -25,6 +28,7 @@ interface ProcessedMarker {
   leashedToSuperTag?: string | null;
   macAddress: string;
   registrationToken: string;
+  nodeAddress: string;
 }
 
 function App() {
@@ -80,12 +84,12 @@ function App() {
       name: tag.name || 'Unnamed Asset',
       type: getTagType(tag.registrationToken),
       temperature: tag.fahrenheit,
-      battery: calculateBatteryPercentage(tag),
+      battery: getBatteryInfo(tag),
       lastUpdate: tag.lastEventTime || new Date().toISOString(),
       bleAssets: findLeashedTags(tag.nodeAddress),
       macAddress: tag.macAddress,
       alerts: tag.alerts,
-      doorSensorStatus: tag.batteryStatus,
+      doorSensorStatus: tag.doorSensorAlarmStatus,
       leashedToSuperTag: findSuperTagName(tag.sourceSupertagId),
       nodeAddress: tag.nodeAddress,
       registrationToken: tag.registrationToken,
@@ -127,8 +131,8 @@ function App() {
           return bTime - aTime;
         }
         case 'lowBattery': {
-          const aBattery = typeof a.battery === 'number' ? a.battery : 100;
-          const bBattery = typeof b.battery === 'number' ? b.battery : 100;
+          const aBattery = a.battery.level ?? 100;
+          const bBattery = b.battery.level ?? 100;
           return aBattery - bBattery;
         }
         case 'status': {
@@ -154,7 +158,9 @@ function App() {
   }, [processedMarkers, assetViewType, searchTerm, sortOption]);
 
   const assetStats = useMemo(() => {
-    const lowBatteryCount = filteredAndSortedMarkers.filter(asset => asset.battery < 30).length;
+    const lowBatteryCount = filteredAndSortedMarkers.filter(asset => 
+      asset.battery.level !== null && asset.battery.level < 30 || asset.battery.status === 'Low'
+    ).length;
     
     const sensorCounts = filteredAndSortedMarkers.reduce((acc, asset) => {
       if (asset.registrationToken === TagTypes.SUPERTAG) {
@@ -209,40 +215,6 @@ function App() {
       zoom: 13
     };
   }, [selectedAsset, filteredAndSortedMarkers]);
-
-  const getAlertColor = (alertType: string) => {
-    switch (alertType) {
-      case 'temperature':
-        return 'text-red-500';
-      case 'battery':
-        return 'text-orange-500';
-      case 'impact':
-        return 'text-yellow-500';
-      case 'geofence':
-        return 'text-blue-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
-  const getAlertTitle = (alertType: string) => {
-    switch (alertType) {
-      case 'temperature':
-        return 'High Temperature Alert';
-      case 'battery':
-        return 'Low Battery Alert';
-      case 'impact':
-        return 'Impact Alert';
-      case 'geofence':
-        return 'Geofence Alert';
-      default:
-        return 'Alert';
-    }
-  };
-
-  const shouldShowTemperature = (registrationToken: string) => {
-    return registrationToken === TagTypes.SUPERTAG || registrationToken === TagTypes.TEMPERATURE;
-  };
 
   if (!authenticated) {
     return <LoginScreen onLogin={handleLogin} />;
@@ -429,12 +401,12 @@ function App() {
                           {asset.alerts && asset.alerts.length > 0 && (
                             <div className="relative group/tooltip">
                               <AlertTriangle 
-                                className={`w-4 h-4 ${getAlertColor(asset.alerts[0])}`}
+                                className="w-4 h-4 text-red-500"
                               />
                               <div className="absolute left-1/2 -translate-x-1/2 -top-2 transform -translate-y-full 
                                             opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200
                                             whitespace-nowrap px-2 py-1 rounded bg-gray-800 text-white text-xs">
-                                {getAlertTitle(asset.alerts[0])}
+                                Alert
                               </div>
                             </div>
                           )}
@@ -444,30 +416,32 @@ function App() {
                         </span>
                       </div>
 
-                      <div className={`grid ${shouldShowTemperature(asset.registrationToken) ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                      <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center gap-1.5">
                           <Battery 
                             className={`w-4 h-4 ${
-                              asset.battery <= 20 ? 'text-orange-500' : 
-                              asset.battery <= 50 ? 'text-yellow-500' : 'text-[#87B812]'
+                              asset.battery.status === 'Low' ? 'text-orange-500' : 
+                              asset.battery.level !== null ? 
+                                (asset.battery.level <= 20 ? 'text-orange-500' : 
+                                 asset.battery.level <= 50 ? 'text-yellow-500' : 'text-[#87B812]') 
+                              : 'text-[#87B812]'
                             }`} 
                           />
                           <span className={`text-sm ${
-                            asset.battery <= 20 ? 'text-orange-600' : 
-                            asset.battery <= 50 ? 'text-yellow-600' : 'text-gray-600'
+                            asset.battery.status === 'Low' ? 'text-orange-600' : 'text-gray-600'
                           }`}>
-                            {asset.battery}%
+                            {asset.battery.status === 'Low' ? 'Low' : 
+                             asset.battery.level !== null ? `${asset.battery.level}%` : 
+                             asset.battery.status}
                           </span>
                         </div>
-                        {shouldShowTemperature(asset.registrationToken) && (
-                          <div className="flex items-center gap-1.5">
-                            <Thermometer className={`w-4 h-4 ${
-                              asset.temperature && asset.temperature >= 80 ? 'text-red-500' :
-                              asset.temperature && asset.temperature >= 70 ? 'text-orange-500' : 'text-[#004780]'
-                            }`} />
-                            <span className="text-sm text-gray-600">{asset.temperature}°F</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <Thermometer className={`w-4 h-4 ${
+                            asset.temperature && asset.temperature >= 80 ? 'text-red-500' :
+                            asset.temperature && asset.temperature >= 70 ? 'text-orange-500' : 'text-[#004780]'
+                          }`} />
+                          <span className="text-sm text-gray-600">{asset.temperature}°F</span>
+                        </div>
                       </div>
 
                       {asset.registrationToken === TagTypes.DOOR_SENSOR && (
@@ -545,7 +519,7 @@ function App() {
                         {assetStats.lowBatteryCount}
                       </div>
                       <p className="text-sm text-gray-500 mt-1">
-                        Assets with battery below 30%
+                        Assets with battery below 30% or low status
                       </p>
                     </div>
 
