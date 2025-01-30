@@ -147,9 +147,22 @@ function App() {
           return bTime - aTime;
         }
         case 'lowBattery': {
-          const aBattery = a.battery.level ?? 100;
-          const bBattery = b.battery.level ?? 100;
-          return aBattery - bBattery;
+          // First, compare battery status (Low comes before OK)
+          if (a.battery.status !== b.battery.status) {
+            return a.battery.status === 'Low' ? -1 : 1;
+          }
+          
+          // If both have battery levels, sort by level ascending
+          if (a.battery.level !== null && b.battery.level !== null) {
+            return a.battery.level - b.battery.level;
+          }
+          
+          // If only one has a battery level, the one with level comes first
+          if (a.battery.level !== null) return -1;
+          if (b.battery.level !== null) return 1;
+          
+          // If neither has a battery level, maintain their relative position
+          return 0;
         }
         case 'status': {
           const aTime = a.lastUpdate ? new Date(a.lastUpdate).getTime() : 0;
