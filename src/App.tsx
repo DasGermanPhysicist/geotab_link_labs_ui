@@ -39,6 +39,13 @@ const is470mAhBattery = (capacity: number | string | undefined): boolean => {
   return numericCapacity === 470 || numericCapacity === 470.0;
 };
 
+const isConnected = (lastEventTime: string): boolean => {
+  const date = new Date(lastEventTime);
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return date >= twentyFourHoursAgo;
+};
+
 function App() {
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
   const [tags, setTags] = useState<Tag[]>([]);
@@ -85,25 +92,30 @@ function App() {
   };
 
   const processedMarkers = useMemo(() => {
-    return tags.map(tag => ({
-      position: tag.latitude != null && tag.longitude != null
-        ? [Number(tag.latitude), Number(tag.longitude)] as LatLngTuple
-        : DEFAULT_POSITION,
-      name: tag.name || 'Unnamed Asset',
-      type: getTagType(tag.registrationToken),
-      temperature: tag.fahrenheit,
-      battery: getBatteryInfo(tag),
-      lastUpdate: tag.lastEventTime || new Date().toISOString(),
-      bleAssets: findLeashedTags(tag.nodeAddress),
-      macAddress: tag.macAddress,
-      alerts: tag.alerts,
-      doorSensorStatus: tag.doorSensorAlarmStatus,
-      leashedToSuperTag: findSuperTagName(tag.sourceSupertagId),
-      nodeAddress: tag.nodeAddress,
-      registrationToken: tag.registrationToken,
-      chargeState: tag.chargeState,
-      batteryCapacity_mAh: tag.batteryCapacity_mAh
-    }));
+    return tags.map(tag => {
+      const bleAssets = findLeashedTags(tag.nodeAddress);
+      const connectedCount = bleAssets.filter(asset => isConnected(asset.lastEventTime)).length;
+
+      return {
+        position: tag.latitude != null && tag.longitude != null
+          ? [Number(tag.latitude), Number(tag.longitude)] as LatLngTuple
+          : DEFAULT_POSITION,
+        name: tag.name || 'Unnamed Asset',
+        type: getTagType(tag.registrationToken),
+        temperature: tag.fahrenheit,
+        battery: getBatteryInfo(tag),
+        lastUpdate: tag.lastEventTime || new Date().toISOString(),
+        bleAssets,
+        alerts: tag.alerts,
+        doorSensorStatus: tag.doorSensorAlarmStatus,
+        leashedToSuperTag: findSuperTagName(tag.sourceSupertagId),
+        macAddress: tag.macAddress,
+        nodeAddress: tag.nodeAddress,
+        registrationToken: tag.registrationToken,
+        chargeState: tag.chargeState,
+        batteryCapacity_mAh: tag.batteryCapacity_mAh
+      };
+    });
   }, [tags]);
 
   const filteredAndSortedMarkers = useMemo(() => {
@@ -393,108 +405,117 @@ function App() {
               </div>
 
               <div className="space-y-3 mt-4">
-                {filteredAndSortedMarkers.map((asset, index) => (
-                  <div
-                    key={index}
-                    className={`bg-white border rounded-lg cursor-pointer transition-all duration-200 hover:border-[#87B812] group
-                      ${asset.alerts?.length ? 'border-l-4 border-l-red-500 border-t border-r border-b border-gray-200' : 'border-gray-200'}
-                      ${selectedAsset?.macAddress === asset.macAddress ? 'ring-2 ring-[#87B812] ring-opacity-50' : ''}
-                    `}
-                    onClick={() => handleAssetClick(asset)}
-                  >
-                    <div className="p-3">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-900 group-hover:text-[#004780] transition-colors">
-                            {asset.name}
-                          </h3>
-                          {asset.alerts && asset.alerts.length > 0 && (
-                            <div className="relative group/tooltip">
-                              <AlertTriangle 
-                                className="w-4 h-4 text-red-500"
-                              />
-                              <div className="absolute left-1/2 -translate-x-1/2 -top-2 transform -translate-y-full 
-                                            opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200
-                                            whitespace-nowrap px-2 py-1 rounded bg-gray-800 text-white text-xs">
-                                Alert
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                          {asset.type}
-                        </span>
-                      </div>
+                {filteredAndSortedMarkers.map((asset, index) => {
+                  const connectedCount = asset.bleAssets.filter(bleAsset => 
+                    isConnected(bleAsset.lastEventTime)
+                  ).length;
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <Battery 
-                            className={`w-4 h-4 ${
-                              asset.battery.status === 'Low' ? 'text-orange-500' : 
-                              asset.battery.level !== null ? 
-                                (asset.battery.level <= 20 ? 'text-orange-500' : 
-                                 asset.battery.level <= 50 ? 'text-yellow-500' : 'text-[#87B812]') 
-                              : 'text-[#87B812]'
-                            }`} 
-                          />
-                          <div className="flex flex-col">
-                            <span className={`text-sm ${
-                              asset.battery.status === 'Low' ? 'text-orange-600' : 'text-gray-600'
-                            }`}>
-                              {asset.battery.status === 'Low' ? 'Low' : 
-                               asset.battery.level !== null ? `${asset.battery.level}%` : 
-                               asset.battery.status}
-                            </span>
-                            {is470mAhBattery(asset.batteryCapacity_mAh) && asset.chargeState && (
-                              <span className={`text-xs ${
-                                asset.chargeState === 'charging' ? 'text-green-500' :
-                                asset.chargeState === 'charge_done' ? 'text-[#87B812]' :
-                                'text-gray-500'
-                              }`}>
-                                {asset.chargeState === 'charging' ? 'Charging' :
-                                 asset.chargeState === 'charge_done' ? 'Fully Charged' :
-                                 'Not Charging'}
-                              </span>
+                  return (
+                    <div
+                      key={index}
+                      className={`bg-white border rounded-lg cursor-pointer transition-all duration-200 hover:border-[#87B812] group
+                        ${asset.alerts?.length ? 'border-l-4 border-l-red-500 border-t border-r border-b border-gray-200' : 'border-gray-200'}
+                        ${selectedAsset?.macAddress === asset.macAddress ? 'ring-2 ring-[#87B812] ring-opacity-50' : ''}
+                      `}
+                      onClick={() => handleAssetClick(asset)}
+                    >
+                      <div className="p-3">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-gray-900 group-hover:text-[#004780] transition-colors">
+                              {asset.name}
+                            </h3>
+                            {asset.alerts && asset.alerts.length > 0 && (
+                              <div className="relative group/tooltip">
+                                <AlertTriangle 
+                                  className="w-4 h-4 text-red-500"
+                                />
+                                <div className="absolute left-1/2 -translate-x-1/2 -top-2 transform -translate-y-full 
+                                              opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200
+                                              whitespace-nowrap px-2 py-1 rounded bg-gray-800 text-white text-xs">
+                                  Alert
+                                </div>
+                              </div>
                             )}
                           </div>
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                            {asset.type}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Thermometer className={`w-4 h-4 ${
-                            asset.temperature && asset.temperature >= 80 ? 'text-red-500' :
-                            asset.temperature && asset.temperature >= 70 ? 'text-orange-500' : 'text-[#004780]'
-                          }`} />
-                          <span className="text-sm text-gray-600">{asset.temperature}°F</span>
-                        </div>
-                      </div>
 
-                      {asset.registrationToken === TagTypes.DOOR_SENSOR && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <DoorOpen className={`w-4 h-4 ${
-                            asset.doorSensorStatus === 'OPEN' ? 'text-red-500' : 'text-green-500'
-                          }`} />
-                          <span className="text-sm">{asset.doorSensorStatus || 'Unknown'}</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <Battery 
+                              className={`w-4 h-4 ${
+                                asset.battery.status === 'Low' ? 'text-orange-500' : 
+                                asset.battery.level !== null ? 
+                                  (asset.battery.level <= 20 ? 'text-orange-500' : 
+                                   asset.battery.level <= 50 ? 'text-yellow-500' : 'text-[#87B812]') 
+                                : 'text-[#87B812]'
+                              }`} 
+                            />
+                            <div className="flex flex-col">
+                              <span className={`text-sm ${
+                                asset.battery.status === 'Low' ? 'text-orange-600' : 'text-gray-600'
+                              }`}>
+                                {asset.battery.status === 'Low' ? 'Low' : 
+                                 asset.battery.level !== null ? `${asset.battery.level}%` : 
+                                 asset.battery.status}
+                              </span>
+                              {is470mAhBattery(asset.batteryCapacity_mAh) && asset.chargeState && (
+                                <span className={`text-xs ${
+                                  asset.chargeState === 'charging' ? 'text-green-500' :
+                                  asset.chargeState === 'charge_done' ? 'text-[#87B812]' :
+                                  'text-gray-500'
+                                }`}>
+                                  {asset.chargeState === 'charging' ? 'Charging' :
+                                   asset.chargeState === 'charge_done' ? 'Fully Charged' :
+                                   'Not Charging'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Thermometer className={`w-4 h-4 ${
+                              asset.temperature && asset.temperature >= 80 ? 'text-red-500' :
+                              asset.temperature && asset.temperature >= 70 ? 'text-orange-500' : 'text-[#004780]'
+                            }`} />
+                            <span className="text-sm text-gray-600">{asset.temperature}°F</span>
+                          </div>
                         </div>
-                      )}
 
-                      {asset.registrationToken === TagTypes.SUPERTAG && asset.bleAssets.length > 0 && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          Leashed BLE Assets: {asset.bleAssets.length}
+                        {asset.registrationToken === TagTypes.DOOR_SENSOR && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <DoorOpen className={`w-4 h-4 ${
+                              asset.doorSensorStatus === 'OPEN' ? 'text-red-500' : 'text-green-500'
+                            }`} />
+                            <span className="text-sm">{asset.doorSensorStatus || 'Unknown'}</span>
+                          </div>
+                        )}
+
+                        {asset.registrationToken === TagTypes.SUPERTAG && asset.bleAssets.length > 0 && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <Box className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {connectedCount}/{asset.bleAssets.length} BLE Assets
+                            </span>
+                          </div>
+                        )}
+
+                        {asset.registrationToken !== TagTypes.SUPERTAG && asset.leashedToSuperTag && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            Connected to: {asset.leashedToSuperTag}
+                          </div>
+                        )}
+
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-xs text-gray-500">{asset.lastUpdate}</span>
                         </div>
-                      )}
-
-                      {asset.registrationToken !== TagTypes.SUPERTAG && asset.leashedToSuperTag && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          Connected to: {asset.leashedToSuperTag}
-                        </div>
-                      )}
-
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-xs text-gray-500">{asset.lastUpdate}</span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

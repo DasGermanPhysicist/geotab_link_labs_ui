@@ -144,12 +144,21 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
     setShowClusterModal(true);
   };
 
+  // Ensure the map container has a minimum height
+  const mapContainerStyle = {
+    height: '100%',
+    width: '100%',
+    borderRadius: '0.5rem',
+    minHeight: '400px'
+  };
+
   return (
-    <div className="relative h-full">
+    <div className="relative h-full" style={{ minHeight: '400px' }}>
       <MapContainer 
+        key={`map-${validCenter.join(',')}`}
         center={validCenter}
         zoom={zoom} 
-        style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
+        style={mapContainerStyle}
         whenReady={handleMapReady}
       >
         {mapReady && (
