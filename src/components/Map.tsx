@@ -54,7 +54,7 @@ interface MapMarker {
   position: LatLngTuple;
   name: string;
   type: string;
-  temperature: number;
+  temperature: number | null;
   battery: {
     status: 'OK' | 'Low';
     level: number | null;
@@ -144,21 +144,12 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
     setShowClusterModal(true);
   };
 
-  // Ensure the map container has a minimum height
-  const mapContainerStyle = {
-    height: '100%',
-    width: '100%',
-    borderRadius: '0.5rem',
-    minHeight: '400px'
-  };
-
   return (
-    <div className="relative h-full" style={{ minHeight: '400px' }}>
+    <div className="relative h-full">
       <MapContainer 
-        key={`map-${validCenter.join(',')}`}
         center={validCenter}
         zoom={zoom} 
-        style={mapContainerStyle}
+        style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
         whenReady={handleMapReady}
       >
         {mapReady && (
@@ -227,7 +218,8 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                           <span className="text-gray-600">Last Update:</span> {marker.lastUpdate}
                         </div>
                         <div>
-                          <span className="text-gray-600">Temperature:</span> {marker.temperature}°F
+                          <span className="text-gray-600">Temperature:</span>{' '}
+                          {marker.temperature ? marker.temperature.toFixed(2) : 'N/A'}°F
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-gray-600">Battery:</span>
@@ -299,7 +291,9 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                         <span className="text-sm text-gray-600">{getBatteryDisplay(marker.battery)}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">{marker.temperature}°F</span>
+                        <span className="text-sm text-gray-600">
+                          {marker.temperature ? marker.temperature.toFixed(2) : 'N/A'}°F
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">
@@ -341,7 +335,8 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                 <span className="text-gray-600">Last Update:</span> {selectedMarker.lastUpdate}
               </div>
               <div>
-                <span className="text-gray-600">Temperature:</span> {selectedMarker.temperature}°F
+                <span className="text-gray-600">Temperature:</span>{' '}
+                {selectedMarker.temperature ? selectedMarker.temperature.toFixed(2) : 'N/A'}°F
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">Battery:</span>
