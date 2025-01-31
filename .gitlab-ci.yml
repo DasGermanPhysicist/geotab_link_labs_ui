@@ -20,7 +20,7 @@ deploy_to_s3:
   image: amazon/aws-cli:latest
   script:
     # JSON Schema
-    - aws s3 sync dist/ s3://linklabs-geotab --acl public-read --include "dist/*" --delete
+    - aws s3 sync dist/ s3://linklabs-geotab --acl public-read --delete
   only:
     - main
   environment:
