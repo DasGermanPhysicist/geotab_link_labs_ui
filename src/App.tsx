@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Battery, Thermometer, Box, MapPin, Clock, AlertTriangle, DoorOpen, ArrowDownUp, PieChart } from 'lucide-react';
+import { Search, Battery, Thermometer, Box, MapPin, Clock, AlertTriangle, DoorOpen, ArrowDownUp, PieChart, HelpCircle, X } from 'lucide-react';
 import { Map } from './components/Map';
 import { BLEAssetsList } from './components/BLEAssetsList';
 import { LoginScreen } from './components/LoginScreen';
 import { OrgSiteSelector } from './components/OrgSiteSelector';
 import { fetchTags, isAuthenticated, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
+import { BatteryDistribution } from './components/BatteryDistribution';
+import { DoorSensorStatus } from './components/DoorSensorStatus';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 
@@ -51,6 +53,7 @@ function App() {
   const [assetViewType, setAssetViewType] = useState<AssetViewType>('all');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>('name');
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
     if (authenticated && selectedSiteId) {
@@ -147,21 +150,17 @@ function App() {
           return bTime - aTime;
         }
         case 'lowBattery': {
-          // First, compare battery status (Low comes before OK)
           if (a.battery.status !== b.battery.status) {
             return a.battery.status === 'Low' ? -1 : 1;
           }
           
-          // If both have battery levels, sort by level ascending
           if (a.battery.level !== null && b.battery.level !== null) {
             return a.battery.level - b.battery.level;
           }
           
-          // If only one has a battery level, the one with level comes first
           if (a.battery.level !== null) return -1;
           if (b.battery.level !== null) return 1;
           
-          // If neither has a battery level, maintain their relative position
           return 0;
         }
         case 'status': {
@@ -187,10 +186,33 @@ function App() {
   }, [processedMarkers, assetViewType, searchTerm, sortOption]);
 
   const assetStats = useMemo(() => {
-    const lowBatteryCount = filteredAndSortedMarkers.filter(asset => 
-      asset.battery.level !== null && asset.battery.level < 30 || asset.battery.status === 'Low'
-    ).length;
-    
+    const now = new Date().getTime();
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+
+    const notSeenCounts = filteredAndSortedMarkers.reduce((acc, asset) => {
+      const lastEventTime = new Date(asset.lastUpdate).getTime();
+      const timeDiff = now - lastEventTime;
+
+      if (timeDiff > thirtyDays) {
+        acc.thirtyDays++;
+      } else if (timeDiff > fourteenDays) {
+        acc.fourteenDays++;
+      } else if (timeDiff > sevenDays) {
+        acc.sevenDays++;
+      } else if (timeDiff > threeDays) {
+        acc.threeDays++;
+      }
+      return acc;
+    }, {
+      threeDays: 0,
+      sevenDays: 0,
+      fourteenDays: 0,
+      thirtyDays: 0
+    });
+
     const sensorCounts = filteredAndSortedMarkers.reduce((acc, asset) => {
       if (asset.registrationToken === TagTypes.SUPERTAG) {
         acc.supertags++;
@@ -209,16 +231,9 @@ function App() {
       otherSensors: 0
     });
 
-    const inactiveAssets = filteredAndSortedMarkers.filter(asset => {
-      const lastEventTime = new Date(asset.lastUpdate).getTime();
-      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
-      return lastEventTime < twentyFourHoursAgo;
-    }).length;
-
     return {
-      lowBatteryCount,
-      sensorCounts,
-      inactiveAssets
+      notSeenCounts,
+      sensorCounts
     };
   }, [filteredAndSortedMarkers]);
 
@@ -268,23 +283,63 @@ function App() {
                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#87B812]"
               />
             </div>
-            <div className="flex items-center gap-2 border border-gray-200 rounded-lg overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 border border-gray-200 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setShowMapView(false)}
+                  className={`px-6 py-2 ${!showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => setShowMapView(true)}
+                  className={`px-6 py-2 ${showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
+                >
+                  Map View
+                </button>
+              </div>
               <button
-                onClick={() => setShowMapView(false)}
-                className={`px-6 py-2 ${!showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
+                onClick={() => setShowHelpModal(true)}
+                className="p-2 hover:bg-gray-50 rounded-full transition-colors"
+                title="Help & Support"
               >
-                Dashboard
-              </button>
-              <button
-                onClick={() => setShowMapView(true)}
-                className={`px-6 py-2 ${showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
-              >
-                Map View
+                <HelpCircle className="w-5 h-5 text-[#004780]" />
               </button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Help Modal */}
+      {showHelpModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-[#004780]">Link Labs Support</h2>
+              <button 
+                onClick={() => setShowHelpModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Welcome to Link Labs Support! To submit a support ticket, please click the button below.
+            </p>
+
+            <a
+              href="https://apps.airfinder.com/help"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full bg-[#87B812] text-white text-center px-6 py-3 rounded-lg hover:bg-[#769f10] transition-colors font-medium"
+              onClick={() => setShowHelpModal(false)}
+            >
+              Enter Ticket
+            </a>
+          </div>
+        </div>
+      )}
 
       {loading && !selectedSiteId && (
         <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
@@ -560,56 +615,62 @@ function App() {
                 </div>
 
                 {!selectedAsset && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white rounded-lg shadow-sm p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Battery className="w-6 h-6 text-orange-500" />
-                        <h3 className="font-semibold text-lg">Low Battery Assets</h3>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white rounded-lg shadow-sm p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <PieChart className="w-6 h-6 text-[#87B812]" />
+                          <h3 className="font-semibold text-lg">Asset Distribution</h3>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">SuperTags</span>
+                            <span className="font-semibold">{assetStats.sensorCounts.supertags}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Door Sensors</span>
+                            <span className="font-semibold">{assetStats.sensorCounts.doorSensors}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Temperature Sensors</span>
+                            <span className="font-semibold">{assetStats.sensorCounts.temperatureSensors}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Other Sensors</span>
+                            <span className="font-semibold">{assetStats.sensorCounts.otherSensors}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-3xl font-bold text-orange-500">
-                        {assetStats.lowBatteryCount}
+
+                      <div className="bg-white rounded-lg shadow-sm p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Clock className="w-6 h-6 text-[#004780]" />
+                          <h3 className="font-semibold text-lg">Not Seen Assets</h3>
+                        </div>
+                        <div className="space-y-3">                    
+                          <div className="flex justify-between between items-center p-2 bg-gray-50 rounded">
+                            <span className="text-sm text-gray-600">Greater than 3 days</span>
+                            <span className="font-semibold text-orange-500">{assetStats.notSeenCounts.threeDays}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span className="text-sm text-gray-600">Greater than 7 days</span>
+                            <span className="font-semibold text-orange-600">{assetStats.notSeenCounts.sevenDays}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span className="text-sm text-gray-600">Greater than 14 days</span>
+                            <span className="font-semibold text-red-500">{assetStats.notSeenCounts.fourteenDays}</span>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span className="text-sm text-gray-600">Greater than 30 days</span>
+                            <span className="font-semibold text-red-600">{assetStats.notSeenCounts.thirtyDays}</span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Assets with battery below 30% or low status
-                      </p>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <PieChart className="w-6 h-6 text-[#87B812]" />
-                        <h3 className="font-semibold text-lg">Asset Distribution</h3>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">SuperTags</span>
-                          <span className="font-semibold">{assetStats.sensorCounts.supertags}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Door Sensors</span>
-                          <span className="font-semibold">{assetStats.sensorCounts.doorSensors}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Temperature Sensors</span>
-                          <span className="font-semibold">{assetStats.sensorCounts.temperatureSensors}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Other Sensors</span>
-                          <span className="font-semibold">{assetStats.sensorCounts.otherSensors}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-sm p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Clock className="w-6 h-6 text-red-500" />
-                        <h3 className="font-semibold text-lg">Inactive Assets</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-red-500">
-                        {assetStats.inactiveAssets}
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">
-                        No events in the last 24 hours
-                      </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <BatteryDistribution assets={filteredAndSortedMarkers} />
+                      <DoorSensorStatus assets={filteredAndSortedMarkers} />
                     </div>
                   </div>
                 )}

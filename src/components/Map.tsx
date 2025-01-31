@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Battery, Wifi, WifiOff, Tag, X, ChevronRight } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
+import { TagTypes } from '../lib/api';
 
 // Create custom colored marker icon
 const CustomIcon = L.divIcon({
@@ -61,6 +62,8 @@ interface MapMarker {
   };
   lastUpdate: string;
   bleAssets: any[];
+  registrationToken: string;
+  leashedToSuperTag?: string | null;
 }
 
 interface MapProps {
@@ -226,9 +229,16 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                           <Battery className={`w-4 h-4 ${getBatteryColor(marker.battery)}`} />
                           {getBatteryDisplay(marker.battery)}
                         </div>
-                        <div>
-                          <span className="text-gray-600">Leashed Assets:</span> {marker.bleAssets.length}
-                        </div>
+                        {marker.registrationToken === TagTypes.SUPERTAG ? (
+                          <div>
+                            <span className="text-gray-600">Leashed Assets:</span> {marker.bleAssets.length}
+                          </div>
+                        ) : marker.leashedToSuperTag ? (
+                          <div>
+                            <span className="text-gray-600">Connected to SuperTag:</span>{' '}
+                            <span className="text-[#87B812]">{marker.leashedToSuperTag}</span>
+                          </div>
+                        ) : null}
                       </div>
                       <button
                         onClick={(e) => {
@@ -295,11 +305,19 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
                           {marker.temperature ? marker.temperature.toFixed(2) : 'N/A'}°F
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">
-                          {marker.bleAssets.length} BLE Assets
-                        </span>
-                      </div>
+                      {marker.registrationToken === TagTypes.SUPERTAG ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {marker.bleAssets.length} BLE Assets
+                          </span>
+                        </div>
+                      ) : marker.leashedToSuperTag ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            Connected to: {marker.leashedToSuperTag}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                     
                     <div className="mt-2 text-sm text-gray-500">
@@ -345,50 +363,54 @@ export function Map({ center, markers, zoom = 13 }: MapProps) {
               </div>
             </div>
 
-            <h3 className="text-xl font-semibold mb-4">Leashed BLE Assets ({selectedMarker.bleAssets.length})</h3>
-            <div className="space-y-4">
-              {selectedMarker.bleAssets.map((asset, idx) => (
-                <div key={idx} className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    {asset.connected ? (
-                      <Wifi className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <WifiOff className="w-5 h-5 text-red-500" />
-                    )}
-                    <span className="font-semibold text-lg">{asset.name}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-gray-500" />
-                      <span>{asset.type}</span>
+            {selectedMarker.registrationToken === TagTypes.SUPERTAG && (
+              <>
+                <h3 className="text-xl font-semibold mb-4">Leashed BLE Assets ({selectedMarker.bleAssets.length})</h3>
+                <div className="space-y-4">
+                  {selectedMarker.bleAssets.map((asset, idx) => (
+                    <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        {asset.connected ? (
+                          <Wifi className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <WifiOff className="w-5 h-5 text-red-500" />
+                        )}
+                        <span className="font-semibold text-lg">{asset.name}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-gray-500" />
+                          <span>{asset.type}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Status:</span>{' '}
+                          {asset.connected ? 'Connected' : 'Disconnected'}
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Connection Date:</span>{' '}
+                          {asset.connectionDate}
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Leashed Time:</span>{' '}
+                          {asset.leashedTime}
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Last Update:</span>{' '}
+                          {asset.lastUpdate}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Battery className={`w-4 h-4 ${getBatteryColor(asset.battery)}`} />
+                          {getBatteryDisplay(asset.battery)}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-gray-600">Status:</span>{' '}
-                      {asset.connected ? 'Connected' : 'Disconnected'}
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Connection Date:</span>{' '}
-                      {asset.connectionDate}
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Leashed Time:</span>{' '}
-                      {asset.leashedTime}
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Last Update:</span>{' '}
-                      {asset.lastUpdate}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Battery className={`w-4 h-4 ${getBatteryColor(asset.battery)}`} />
-                      {getBatteryDisplay(asset.battery)}
-                    </div>
-                  </div>
+                  ))}
+                  {selectedMarker.bleAssets.length === 0 && (
+                    <p className="text-gray-500 italic">No BLE assets leashed to this tracker</p>
+                  )}
                 </div>
-              ))}
-              {selectedMarker.bleAssets.length === 0 && (
-                <p className="text-gray-500 italic">No BLE assets leashed to this tracker</p>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}
