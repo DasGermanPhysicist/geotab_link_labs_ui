@@ -1,3 +1,29 @@
+interface GeotabSession {
+    /**
+     * Proxy handler object.
+     */
+    handler: {
+        get: (e: any, r: any, n: any) => any;
+    };
+
+    /**
+     * Target object containing session details.
+     * https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
+     */
+    target: {
+        database: string;
+        date: string;
+        sessionId: string;
+        userName: string;
+    };
+
+    /**
+     * Indicates if the session is revoked.
+     */
+    isRevoked: boolean;
+}
+
+
 /**
  * Interface representing the Geotab API.
  * Provides methods for interacting with the Geotab platform.
@@ -34,7 +60,7 @@ interface GeotabAPI {
      *  @param {Boolean} [newSession] If true, always retrieve a new session from the server. Otherwise, return the current session (if active) or
      *                              retrieve a new one from the server if there are no active sessions
      */
-    getSession(callbackSuccess: (session: any) => void, newSession: boolean): any;
+    getSession(callbackSuccess: (session: GeotabSession) => void, newSession: boolean): void;
 
     /**
      * Makes multiple API calls in a single request.
@@ -157,15 +183,13 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             console.dir(api, { depth: null, colors: true });
             console.dir(state, { depth: null, colors: true });
 
-            const sess = api.getSession(
+            api.getSession(
                 (session: any) => {
                     console.log("session:")
                     console.dir(session, { depth: null, colors: true });
                 },
                 false
             );
-            console.log("session return: " + sess)
-            console.dir(sess, { depth: null, colors: true });
 
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
