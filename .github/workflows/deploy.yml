@@ -44,10 +44,5 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Sync to S3
-        uses: aws-actions/s3-sync-action@v3
-        with:
-          source-dir: ${{ env.BUILD_PATH }}/dist
-          bucket: ${{ env.S3_BUCKET }}
-          bucket-prefix: Airfinder
-          delete: true
-          
+        run: |
+          aws s3 sync ${{ env.BUILD_PATH }}/dist s3://${{ env.S3_BUCKET }}/Airfinder --delete
