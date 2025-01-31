@@ -1,0 +1,35 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: node:20
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - main
+  before_script:
+    - npm install
+
+deploy_to_s3:
+  stage: deploy
+  image: amazon/aws-cli:latest
+  script:
+    # JSON Schema
+    - aws s3 sync dist/ s3://linklabs-geotab --acl public-read --exclude "*" --include "dist/*" --delete
+  only:
+    - main
+  environment:
+    name: production
+  before_script:
+    - echo "Setting up AWS credentials"
+    - mkdir -p ~/.aws
+    - echo "[default]" > ~/.aws/credentials
+    - echo "aws_access_key_id = $AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
+    - echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
+    - echo "[default]" > ~/.aws/config
+    - echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
