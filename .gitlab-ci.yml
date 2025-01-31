@@ -19,8 +19,7 @@ deploy_to_s3:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    # JSON Schema
-    - aws s3 sync dist/ s3://linklabs-geotab --acl public-read --delete
+    - aws s3 sync dist/ s3://geotab.link-labs.com --acl public-read --delete
   only:
     - main
   environment:
