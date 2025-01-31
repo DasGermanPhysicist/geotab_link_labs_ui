@@ -80,8 +80,9 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
 
     return {
         initialize(api, state, callback) {
-            console.dir(api, { depth: null, colors: true });
-            console.dir(state, { depth: null, colors: true });
+            console.log("start initialize")
+            // console.dir(api, { depth: null, colors: true });
+            // console.dir(state, { depth: null, colors: true });
         
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
@@ -90,13 +91,15 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
         },
 
         focus(api, state) {
-            console.dir(api, { depth: null, colors: true });
-            console.dir(state, { depth: null, colors: true });
+            console.log("start focus")
+            // console.dir(api, { depth: null, colors: true });
+            // console.dir(state, { depth: null, colors: true });
         },
         
         blur(api, state) {
-            console.dir(api, { depth: null, colors: true });
-            console.dir(state, { depth: null, colors: true });
+            console.log("start blur")
+            // console.dir(api, { depth: null, colors: true });
+            // console.dir(state, { depth: null, colors: true });
         }
     };
 };
