@@ -31,7 +31,7 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - aws s3 sync dist/ s3://geotab.link-labs.com --acl public-read --delete
+    - aws s3 sync dist/ s3://geotab.link-labs.com/AirfinderAddIn --acl public-read --delete
   only:
     - main
   environment:
