@@ -50,3 +50,4 @@ jobs:
           bucket: ${{ env.S3_BUCKET }}
           bucket-prefix: Airfinder
           delete: true
+          
