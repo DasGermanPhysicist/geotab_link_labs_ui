@@ -4,11 +4,12 @@
 	"version": "1.0",
 	"items": [
 		{
-			"url": "https://linklabs.github.io/GeotabAdd-In",
+			"url": "https://geotab.link-labs.com/AirfinderAddIn/",
 			"path": "/",
 			"menuName": {
 				"en": "Airfinder"
 			}
 		}
-	]
+	],
+	"isSigned": false
 }
