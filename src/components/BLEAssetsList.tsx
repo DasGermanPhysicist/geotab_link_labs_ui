@@ -1,15 +1,17 @@
 import React from 'react';
 import { Wifi, WifiOff, Battery, Clock, Link, Box } from 'lucide-react';
+import { getBatteryInfo } from '../lib/api';
 
 interface BLEAsset {
   name: string;
   connected: boolean;
-  connectionDate: string;
-  leashedTime: string;
   lastEventTime: string;
-  custodyTimeInState: string;
   batteryVoltage: string;
   lowVoltageFlag: boolean;
+  batteryStatus: number | string;
+  batteryCapacity_mAh: number | string;
+  batteryConsumed_mAh?: number | string | null;
+  batteryUsage_uAh?: number | string | null;
 }
 
 interface Asset {
@@ -28,15 +30,6 @@ interface BLEAssetsListProps {
   assets: Asset[];
   selectedAsset: Asset | null;
 }
-
-// Helper function to calculate battery percentage
-const calculateBatteryPercentage = (voltage: string): number => {
-  const voltageNum = parseFloat(voltage);
-  const minVoltage = 2.5;
-  const maxVoltage = 4.2;
-  const percentage = ((voltageNum - minVoltage) / (maxVoltage - minVoltage)) * 100;
-  return Math.round(Math.max(0, Math.min(100, percentage)));
-};
 
 // Helper function to check if a date is within the last 24 hours
 const isWithin24Hours = (dateString: string): boolean => {
@@ -135,7 +128,9 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
     );
   }
 
-  const bleAssetsToShow = selectedAsset.bleAssets || [];
+  const bleAssetsToShow = [...(selectedAsset.bleAssets || [])].sort((a, b) => {
+    return new Date(b.lastEventTime).getTime() - new Date(a.lastEventTime).getTime();
+  });
   const connectedCount = bleAssetsToShow.filter(asset => isWithin24Hours(asset.lastEventTime)).length;
 
   return (
@@ -150,11 +145,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
         <div className="grid gap-4">
           {bleAssetsToShow.map((asset, index) => {
             const isConnected = isWithin24Hours(asset.lastEventTime);
-            const batteryPercentage = calculateBatteryPercentage(asset.batteryVoltage);
-            const batteryInfo = {
-              status: asset.lowVoltageFlag ? 'Low' as const : 'OK' as const,
-              level: batteryPercentage
-            };
+            const batteryInfo = getBatteryInfo(asset);
 
             return (
               <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
@@ -172,7 +163,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <Battery className={`w-4 h-4 ${getBatteryColor(batteryInfo)}`} />
@@ -191,28 +182,11 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-t border-gray-100 pt-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">Last Event:</span>
-                      <span>{asset.lastEventTime}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">Custody Time:</span>
-                      <span>{asset.custodyTimeInState}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-gray-600">Connection Date:</span>{' '}
-                      {asset.connectionDate}
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Leashed Time:</span>{' '}
-                      {asset.leashedTime}
-                    </div>
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Last Event:</span>
+                    <span className="text-sm">{asset.lastEventTime}</span>
                   </div>
                 </div>
               </div>

@@ -6,7 +6,7 @@ import { GeotabLifecycle } from './lib/GeotabLifecycle';
 
 console.log("Hello World!")
 
-// Check if 'geotab' is defined before adding the add-in
+// Attempt to initialize Geotab
 if (typeof geotab !== 'undefined') {
   console.log("Running in Geotab Platform")
   geotab.addin.AirfinderAddIn = GeotabLifecycle;
