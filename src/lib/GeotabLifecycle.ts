@@ -1,45 +1,118 @@
+/**
+ * Interface representing the Geotab API.
+ * Provides methods for interacting with the Geotab platform.
+ * https://github.com/Geotab/sdk/blob/master/src/software/api/codebase/api.js
+ */
 interface GeotabAPI {
-    // Define the properties and methods available on the Geotab API object
+    /**
+     * Makes a call to the Geotab API with the specified parameters.
+     *
+     * @param method - The name of the method to be called.
+     * @param params - The parameters for the API call.
+     * @param success - Callback function to handle successful response.
+     * @param error - Callback function to handle errors.
+     */
+    call(method: string, params: any, success: (result: any) => void, error: (error: any) => void): void;
+
+    /**
+     *  Clears credentials and the credential store.
+     *
+     * @param {successCallback} callbackSuccess The function that is called if the retrieval of sessionId was successful
+     */
+    forget(success: (result: any) => void): void;
+
+    /**
+     * Retrieves the current bookmark state.
+     *
+     * @returns A Promise that resolves with the current bookmark state.
+     */
+    getBookmarkState(): Promise<any>;
+
+    /**
+     *  Retrieves a session. Useful for single sign-on or other cases where you require the credentials
+     *  @param {successCallback} callbackSuccess The function that is called if the retrieval of sessionId was successful
+     *  @param {Boolean} [newSession] If true, always retrieve a new session from the server. Otherwise, return the current session (if active) or
+     *                              retrieve a new one from the server if there are no active sessions
+     */
+    getSession(callbackSuccess: (session: any) => void, newSession: boolean): any;
+
+    /**
+     * Makes multiple API calls in a single request.
+     *
+     * @param methods - The array of method names to be called.
+     * @param params - The array of parameters for each call.
+     * @param callback - Callback function to handle the response.
+     */
+    multiCall(methods: string[], params: any[], callback: (results: any[]) => void): void;
+
+    /**
+     * Sets the bookmark state to the specified value.
+     *
+     * @param state - The new bookmark state to be set.
+     */
+    setBookmarkState(state: any): void;
 }
+
 
 interface PageState {
     /**
-     * Gets an object that represents the current URL state.
-     * @returns An object representing the current URL state.
+     * Creates a Google Analytics tag.
+     * 
+     * @param e - The event or data to be tracked.
      */
-    getState(): object;
+    createGtag(e: any): void;
 
     /**
-     * Sets the current URL state.
-     * @param state - The state object to set, typically modified from getState.
+     * Retrieves the advanced group filter.
+     * 
+     * @returns The advanced group filter.
      */
-    setState(state: object): void;
+    getAdvancedGroupFilter(): any;
 
     /**
-     * Redirects the user to another page with optional parameters.
-     * @param pageName - The name of the page to navigate to.
-     * @param parameters - Optional query string parameters for the page.
+     * Retrieves the group filter.
+     * 
+     * @returns The group filter.
      */
-    gotoPage(pageName: string, parameters?: object): void;
+    getGroupFilter(): any;
 
     /**
-     * Checks whether the current user has the security clearance to view a page by its hash value.
-     * @param pageHash - The hash value of the page to check access for.
-     * @returns True if the user has access, otherwise false.
+     * Retrieves the current state.
+     * 
+     * @returns The current state object.
      */
-    hasAccessToPage(pageHash: string): boolean;
+    getState(): any;
 
     /**
-     * Gets an array with IDs of the selected groups in the organization filter.
-     * @returns An array of group IDs.
+     * Navigates to a specified page.
+     * 
+     * @param t - The target page identifier.
+     * @param i - Additional parameters for navigation.
      */
-    getGroupFilter(): string[];
+    gotoPage(t: string, i?: any): void;
 
     /**
-     * Gets an object with a relation property and a groupFilterConditions array of the selected groups in the organization filter.
-     * @returns An object containing the relation and group filter conditions.
+     * Checks if the user has access to a specified page.
+     * 
+     * @param e - The page identifier.
+     * @returns A boolean indicating access permission.
      */
-    getAdvancedGroupFilter(): { relation: string, groupFilterConditions: any[] };
+    hasAccessToPage(e: string): boolean;
+
+    /**
+     * Sets the state to the specified value.
+     * 
+     * @param e - The new state to be set.
+     */
+    setState(e: any): void;
+
+    /**
+     * Translates a given key or phrase.
+     * 
+     * @param e - The key or phrase to be translated.
+     * @returns The translated string.
+     */
+    translate(e: string): string;
 }
 
 type CallbackFunction = () => void;
@@ -83,7 +156,18 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             console.log("start initialize")
             console.dir(api, { depth: null, colors: true });
             console.dir(state, { depth: null, colors: true });
-        
+
+            const sess = api.getSession(
+                (session: any) => {
+                    console.log("session:")
+                    console.dir(session, { depth: null, colors: true });
+                },
+                false
+            );
+            console.log("session return: " + sess)
+            console.dir(sess, { depth: null, colors: true });
+
+
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
             // be called due to the callback method being called in the initialize method.
