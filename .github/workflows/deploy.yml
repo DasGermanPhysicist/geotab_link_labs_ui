@@ -18,10 +18,10 @@ env:
   S3_BUCKET: "your-s3-bucket-name"
 
 jobs:
-  build:
-    name: Build
-    environment: production
+  build_and_deploy:
     runs-on: ubuntu-latest
+    name: Build and Deploy to S3
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,13 +37,6 @@ jobs:
       - name: Build with Vite + React
         run: npm run build
         working-directory: ${{ env.BUILD_PATH }}
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    name: Deploy to S3
-    environment: production
-    steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
