@@ -1,6 +1,5 @@
 stages:
   - build
-  - lint
   - deploy
 
 build:
@@ -17,7 +16,7 @@ build:
     - npm install
 
 lint:
-  stage: lint
+  stage: build
   image: node:20
   script:
     - npm run lint
