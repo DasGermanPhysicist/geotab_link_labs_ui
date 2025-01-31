@@ -1,5 +1,6 @@
 stages:
   - build
+  - lint
   - deploy
 
 build:
@@ -15,7 +16,18 @@ build:
   before_script:
     - npm install
 
-deploy_to_s3:
+lint:
+  stage: lint
+  image: node:20
+  script:
+    - npm run lint
+  allow_failure: true
+  only:
+    - main
+  before_script:
+    - npm install
+
+deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
