@@ -18,10 +18,22 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<ProcessedMarker | null>(null);
-  const [showMapView, setShowMapView] = useState(false);
+  const [showMapView, setShowMapView] = useState(() => 
+    localStorage.getItem('showMapView') === 'true'
+  );
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [assetViewType, setAssetViewType] = useState<AssetViewType>('all');
+  const [assetViewType, setAssetViewType] = useState<AssetViewType>(() => 
+    (localStorage.getItem('assetViewType') as AssetViewType) || 'all'
+  );
+
+  useEffect(() => {
+    localStorage.setItem('showMapView', showMapView.toString());
+  }, [showMapView]);
+
+  useEffect(() => {
+    localStorage.setItem('assetViewType', assetViewType);
+  }, [assetViewType]);
 
   useEffect(() => {
     if (authenticated && selectedSiteId) {
