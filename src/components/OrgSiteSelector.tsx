@@ -9,8 +9,12 @@ interface OrgSiteSelectorProps {
 export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
-  const [selectedOrgId, setSelectedOrgId] = useState<string>('');
-  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
+  const [selectedOrgId, setSelectedOrgId] = useState<string>(() => 
+    localStorage.getItem('selectedOrgId') || ''
+  );
+  const [selectedSiteId, setSelectedSiteId] = useState<string>(() => 
+    localStorage.getItem('selectedSiteId') || ''
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,16 +26,22 @@ export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
 
   useEffect(() => {
     if (selectedOrgId) {
+      localStorage.setItem('selectedOrgId', selectedOrgId);
       loadSites(selectedOrgId);
     } else {
       setSites([]);
       setSelectedSiteId('');
+      localStorage.removeItem('selectedOrgId');
+      localStorage.removeItem('selectedSiteId');
     }
   }, [selectedOrgId]);
 
   useEffect(() => {
     if (selectedSiteId) {
+      localStorage.setItem('selectedSiteId', selectedSiteId);
       onSiteSelect(selectedSiteId);
+    } else {
+      localStorage.removeItem('selectedSiteId');
     }
   }, [selectedSiteId, onSiteSelect]);
 
@@ -49,6 +59,11 @@ export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
       );
       setOrganizations(sortedData);
       setError(null);
+
+      // If we have a stored orgId but no sites yet, load them
+      if (selectedOrgId && sites.length === 0) {
+        loadSites(selectedOrgId);
+      }
     } catch (err) {
       setError('Failed to load organizations');
       console.error(err);
