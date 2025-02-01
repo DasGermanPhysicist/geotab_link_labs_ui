@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Wifi, WifiOff } from 'lucide-react';
+import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Wifi, WifiOff, Zap } from 'lucide-react';
 import { TagTypes } from '../lib/api';
 import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
@@ -51,6 +51,11 @@ export function AssetList({
       }
     }
   });
+
+  const shouldShowChargeState = (asset: ProcessedMarker): boolean => {
+    const capacity = Number(asset.batteryCapacity_mAh);
+    return (capacity === 470 || capacity === 470.0) && asset.chargeState !== undefined;
+  };
 
   return (
     <div className="p-4">
@@ -198,6 +203,13 @@ export function AssetList({
                        asset.battery.level !== null ? `${asset.battery.level}%` : 
                        asset.battery.status}
                     </span>
+                    {shouldShowChargeState(asset) && (
+                      <span className="text-xs text-gray-500">
+                        {asset.chargeState === 'charging' ? 'Charging' :
+                         asset.chargeState === 'charge_done' ? 'Charge Complete' :
+                         asset.chargeState === 'not_charging' ? 'Not Charging' : ''}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {(asset.registrationToken === TagTypes.TEMPERATURE || 

@@ -174,6 +174,11 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
     return 'text-[#87B812]';
   };
 
+  const shouldShowChargeState = (marker: ProcessedMarker): boolean => {
+    const capacity = Number(marker.batteryCapacity_mAh);
+    return (capacity === 470 || capacity === 470.0) && marker.chargeState !== undefined;
+  };
+
   return (
     <div className="relative h-full">
       <MapContainer 
@@ -252,10 +257,19 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                             {marker.temperature ? `${marker.temperature.toFixed(2)}°F` : ''}
                           </div>
                         )}
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Battery:</span>
-                          <Battery className={`w-4 h-4 ${getBatteryColor(marker.battery)}`} />
-                          {getBatteryDisplay(marker.battery)}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600">Battery:</span>
+                            <Battery className={`w-4 h-4 ${getBatteryColor(marker.battery)}`} />
+                            {getBatteryDisplay(marker.battery)}
+                          </div>
+                          {shouldShowChargeState(marker) && (
+                            <div className="text-xs text-gray-600 ml-14">
+                              {marker.chargeState === 'charging' ? 'Charging' :
+                               marker.chargeState === 'charge_done' ? 'Charge Complete' :
+                               marker.chargeState === 'not_charging' ? 'Not Charging' : ''}
+                            </div>
+                          )}
                         </div>
                         {marker.registrationToken === TagTypes.SUPERTAG ? (
                           <div>
