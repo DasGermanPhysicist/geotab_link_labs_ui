@@ -47,9 +47,11 @@ const getBatteryColor = (battery: { status: 'OK' | 'Low'; level: number | null }
 
 export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
   // If the selected asset is a sensor, find its parent SuperTag
-  if (selectedAsset.leashedToSuperTag) {
-    const parentSuperTag = assets.find(asset => asset.name === selectedAsset.leashedToSuperTag);
-    
+  const parentSuperTag = selectedAsset.leashedToSuperTag 
+    ? assets.find(asset => asset.name === selectedAsset.leashedToSuperTag)
+    : null;
+  
+  if (parentSuperTag) {
     return (
       <div className="bg-white p-6 rounded-lg border border-gray-200">
         <div className="flex items-center gap-3 mb-6">
@@ -57,59 +59,51 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
           <h2 className="text-xl font-semibold">Connected SuperTag</h2>
         </div>
 
-        {parentSuperTag ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">{parentSuperTag.name}</h3>
-            </div>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">{parentSuperTag.name}</h3>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Battery className={`w-5 h-5 ${getBatteryColor(parentSuperTag.battery)}`} />
-                  <span className="font-medium">Battery Level</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {getBatteryDisplay(parentSuperTag.battery)}
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Battery className={`w-5 h-5 ${getBatteryColor(parentSuperTag.battery)}`} />
+                <span className="font-medium">Battery Level</span>
               </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Box className="w-5 h-5 text-[#87B812]" />
-                  <span className="font-medium">Connected Assets</span>
-                </div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {parentSuperTag.bleAssets.filter(asset => 
-                    isWithin24Hours(asset.lastEventTime)
-                  ).length}/{parentSuperTag.bleAssets.length} devices
-                </div>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-5 h-5 text-gray-500" />
-                  <span className="font-medium">Last Event</span>
-                </div>
-                <div className="text-gray-900">
-                  {formatLocalDateTime(parentSuperTag.lastUpdate)}
-                </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {getBatteryDisplay(parentSuperTag.battery)}
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <p className="text-sm text-blue-700">
-                This sensor is currently leashed to {parentSuperTag.name}. The SuperTag is actively monitoring and managing its connected assets.
-              </p>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Box className="w-5 h-5 text-[#87B812]" />
+                <span className="font-medium">Connected Assets</span>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {parentSuperTag.bleAssets.filter(asset => 
+                  isWithin24Hours(asset.lastEventTime)
+                ).length}/{parentSuperTag.bleAssets.length} devices
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-5 h-5 text-gray-500" />
+                <span className="font-medium">Last Event</span>
+              </div>
+              <div className="text-gray-900">
+                {formatLocalDateTime(parentSuperTag.lastUpdate)}
+              </div>
             </div>
           </div>
-        ) : (
-          <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-            <p className="text-sm text-yellow-700">
-              This sensor is registered as connected to a SuperTag, but the SuperTag information is not available.
+
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-sm text-blue-700">
+              This sensor is currently leashed to {parentSuperTag.name}. The SuperTag is actively monitoring and managing its connected assets.
             </p>
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -145,7 +139,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
                     <span className="font-semibold text-lg">{asset.name}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm text-gray-500">Parent: {selectedAsset?.name}</span>
+                    <span className="text-sm text-gray-500">Parent: {selectedAsset.name}</span>
                   </div>
                 </div>
 
