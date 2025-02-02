@@ -90,7 +90,8 @@ function App() {
         nodeAddress: tag.nodeAddress,
         registrationToken: tag.registrationToken,
         chargeState: tag.chargeState,
-        batteryCapacity_mAh: tag.batteryCapacity_mAh
+        batteryCapacity_mAh: tag.batteryCapacity_mAh,
+        geotabSerialNumber: tag.geotabSerialNumber
       };
     });
   }, [tags]);
@@ -117,6 +118,7 @@ function App() {
           (marker.macAddress || '').toLowerCase().includes(searchLower) ||
           (marker.doorSensorStatus || '').toLowerCase().includes(searchLower) ||
           (marker.leashedToSuperTag || '').toLowerCase().includes(searchLower) ||
+          (marker.geotabSerialNumber || '').toLowerCase().includes(searchLower) ||
           marker.bleAssets.some(asset => (asset.name || '').toLowerCase().includes(searchLower))
         );
       });
@@ -201,6 +203,7 @@ function App() {
                 selectedAsset={selectedAsset}
                 markers={filteredMarkers}
                 mapConfig={mapConfig}
+                onAssetSelect={setSelectedAsset}
               />
             )}
           </div>

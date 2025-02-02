@@ -1,5 +1,6 @@
 import React from 'react';
 import { Map } from './Map';
+import { AssetIdentifiers } from './AssetIdentifiers';
 import { BLEAssetsList } from './BLEAssetsList';
 import { BatteryDistribution } from './BatteryDistribution';
 import { DoorSensorStatus } from './DoorSensorStatus';
@@ -13,9 +14,10 @@ interface DashboardProps {
     center: LatLngTuple;
     zoom: number;
   };
+  onAssetSelect: (asset: ProcessedMarker | null) => void;
 }
 
-export function Dashboard({ selectedAsset, markers, mapConfig }: DashboardProps) {
+export function Dashboard({ selectedAsset, markers, mapConfig, onAssetSelect }: DashboardProps) {
   const markersToDisplay = selectedAsset ? [selectedAsset] : markers;
 
   return (
@@ -51,11 +53,17 @@ export function Dashboard({ selectedAsset, markers, mapConfig }: DashboardProps)
       )}
 
       {selectedAsset && (
-        <div className="bg-white rounded-lg shadow-sm">
-          <BLEAssetsList 
-            assets={markers} 
-            selectedAsset={selectedAsset}
+        <div className="space-y-6">
+          <AssetIdentifiers 
+            macAddress={selectedAsset.macAddress}
+            geotabSerialNumber={selectedAsset.geotabSerialNumber}
           />
+          <div className="bg-white rounded-lg shadow-sm">
+            <BLEAssetsList 
+              assets={markers} 
+              selectedAsset={selectedAsset}
+            />
+          </div>
         </div>
       )}
     </div>
