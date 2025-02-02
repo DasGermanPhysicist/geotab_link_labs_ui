@@ -1,5 +1,3 @@
-import { LatLngTuple } from 'leaflet';
-
 export interface ProcessedMarker {
   name: string;
   type: string;
@@ -15,6 +13,7 @@ export interface ProcessedMarker {
   doorSensorStatus?: string;
   leashedToSuperTag?: string | null;
   macAddress: string;
+  geotabSerialNumber?: string;
   registrationToken: string;
   nodeAddress: string;
   chargeState?: 'not_charging' | 'charge_done' | 'charging' | null;

@@ -13,16 +13,6 @@ export function formatLocalDateTime(timestamp: string): string {
       return 'Invalid date';
     }
     
-    // Debug logging
-    console.log('Date conversion:', {
-      input: timestamp,
-      utcTime: date.toISOString(),
-      localTime: date.toString(),
-      localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      offset: getTimezoneInfo(timestamp),
-      output: format(date, 'MMM d, yyyy, h:mm a')
-    });
-    
     // Format: "Jan 31, 2025, 10:41 AM" in local timezone
     return format(date, 'MMM d, yyyy, h:mm a');
   } catch (error) {

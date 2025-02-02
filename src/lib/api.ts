@@ -34,6 +34,7 @@ export interface Tag {
   batteryConsumed_mAh?: number | string | null;
   batteryUsage_uAh?: number | string | null;
   alerts?: string[];
+  geotabSerialNumber?: string;
 }
 
 export interface BatteryInfo {
@@ -51,14 +52,12 @@ export interface BLEAsset {
   battery: BatteryInfo;
 }
 
-// Define tag type constants
 export const TagTypes = {
   SUPERTAG: 'D29B3BE8F2CC9A1A7051',
   DOOR_SENSOR: '61697266696E64657200',
   TEMPERATURE: '150285A4E29B7856C7CC'
 } as const;
 
-// Function to get the type of tag based on registration token
 export function getTagType(registrationToken: string): string {
   switch (registrationToken) {
     case TagTypes.SUPERTAG:
@@ -79,7 +78,6 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor to add auth header
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -92,7 +90,6 @@ export async function login({ username, password }: LoginCredentials): Promise<b
   try {
     const authHeader = 'Basic ' + btoa(`${username}:${password}`);
     
-    // Test credentials by trying to fetch organizations
     const response = await api.get('/networkAsset/airfinder/organizations', {
       headers: {
         'Authorization': authHeader
@@ -119,7 +116,6 @@ export async function fetchOrganizations(): Promise<Organization[]> {
       name: String(org.value || org.name || 'Unnamed Organization')
     }));
   } catch (error) {
-    // Ensure we're only logging serializable data
     console.error('Failed to fetch organizations:', {
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -135,7 +131,6 @@ export async function fetchSites(organizationId: string): Promise<Site[]> {
       name: String(site.value || site.name || site.siteName || 'Unnamed Site')
     }));
   } catch (error) {
-    // Ensure we're only logging serializable data
     console.error('Failed to fetch sites:', {
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -151,13 +146,16 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
       page: '1',
       sortBy: 'nodeName',
       sort: 'asc',
-      all: 'true'
+      all: 'true',
+      includeGeotabInfo: 'true'
     });
 
     const response = await api.get(`/networkAsset/airfinder/v4/tags?${params}`);
-    return response.data || [];
+    return (response.data || []).map((tag: any) => ({
+      ...tag,
+      geotabSerialNumber: tag.geotabSerialNumber || tag.geotabSerial || null
+    }));
   } catch (error) {
-    // Ensure we're only logging serializable data
     console.error('Failed to fetch tags:', {
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -174,10 +172,8 @@ export function logout(): void {
 }
 
 export function getBatteryInfo(tag: Tag): BatteryInfo {
-  // Convert batteryStatus to number for comparison
   const batteryStatusNum = Number(tag.batteryStatus);
   
-  // If batteryStatus is 0 or conversion failed, return Low status with no level
   if (batteryStatusNum === 0 || isNaN(batteryStatusNum)) {
     return { status: 'Low', level: null };
   }
@@ -185,26 +181,21 @@ export function getBatteryInfo(tag: Tag): BatteryInfo {
   const status = batteryStatusNum === 1 ? 'OK' : 'Low';
   let level: number | null = null;
 
-  // Convert batteryCapacity_mAh to number for comparison
   const batteryCapacity = Number(tag.batteryCapacity_mAh);
   
-  // Only calculate battery level if batteryCapacity_mAh is not 470.0 or 470 and conversion succeeded
   if (!isNaN(batteryCapacity) && batteryCapacity !== 470 && batteryCapacity !== 470.0) {
     if (tag.batteryConsumed_mAh != null) {
-      // Convert and calculate using batteryConsumed_mAh
       const consumed = Number(tag.batteryConsumed_mAh);
       if (!isNaN(consumed)) {
         level = ((batteryCapacity * 0.75 - consumed) / (batteryCapacity * 0.75)) * 100;
       }
     } else if (tag.batteryUsage_uAh != null) {
-      // Convert and calculate using batteryUsage_uAh
       const usage = Number(tag.batteryUsage_uAh);
       if (!isNaN(usage)) {
         level = ((batteryCapacity * 0.75 - usage / 1000) / (batteryCapacity * 0.75)) * 100;
       }
     }
 
-    // Ensure level is between 0 and 100
     if (level !== null) {
       level = Math.max(0, Math.min(100, Math.round(level)));
     }
