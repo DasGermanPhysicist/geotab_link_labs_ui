@@ -34,3 +34,27 @@
   background: white !important;
   min-width: 160px !important;
 }
+
+/* Ensure map stays behind content */
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 2 !important;
+}
+
+.leaflet-popup {
+  z-index: 3 !important;
+}
+
+/* Ensure markers appear above the map but below other content */
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  z-index: 4 !important;
+}
+
+/* Custom marker cluster styling */
+.custom-marker-cluster {
+  z-index: 4 !important;
+}

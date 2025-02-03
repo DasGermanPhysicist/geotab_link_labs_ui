@@ -180,17 +180,24 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   };
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-full [&_.leaflet-control-container]:z-[5]">
       <MapContainer 
         center={validCenter}
         zoom={zoom} 
         style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
         whenReady={(map) => handleMapReady(map.target)}
+        zoomControl={false}
       >
         {mapReady && (
           <>
             <MapUpdater center={validCenter} zoom={zoom} selectedAsset={selectedAsset} />
             
+            <div className="leaflet-control-container">
+              <div className="leaflet-top leaflet-right">
+                <div className="leaflet-control-zoom leaflet-bar leaflet-control"></div>
+              </div>
+            </div>
+
             <LayersControl position="topright">
               <LayersControl.BaseLayer checked name="Street">
                 <TileLayer
