@@ -10,7 +10,7 @@ build:
   stage: build
   image: node:20
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_ENV=production; export AWS_S3_BUCKET=geotab.link-labs.com; else export BUILD_ENV=develop; export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_ENV=production; else export BUILD_ENV=develop; fi
     - NODE_ENV=$BUILD_ENV npm run build
   artifacts:
     paths:
@@ -37,6 +37,7 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; export AWS_S3_BUCKET=geotab.link-labs.com; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
     - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
     - main
