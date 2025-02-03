@@ -111,12 +111,28 @@ export async function login({ username, password }: LoginCredentials): Promise<b
 export async function fetchOrganizations(): Promise<Organization[]> {
   try {
     const response = await api.get('/networkAsset/airfinder/organizations');
-    return (response.data || []).map((org: any) => ({
+    const organizations = (response.data || []).map((org: any) => ({
       id: String(org.id || ''),
       name: String(org.value || org.name || 'Unnamed Organization')
     }));
+    return organizations;
   } catch (error) {
     console.error('Failed to fetch organizations:', {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+    throw error;
+  }
+}
+
+export async function fetchCurrentUserSites(): Promise<Site[]> {
+  try {
+    const response = await api.get('/networkAsset/airfinder/sites?currentUser=true');
+    return (response.data || []).map((site: any) => ({
+      id: String(site.id || ''),
+      name: String(site.value || site.name || site.siteName || 'Unnamed Site')
+    }));
+  } catch (error) {
+    console.error('Failed to fetch current user sites:', {
       message: error instanceof Error ? error.message : 'Unknown error'
     });
     throw error;
