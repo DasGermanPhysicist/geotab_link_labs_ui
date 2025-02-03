@@ -50,7 +50,7 @@ deploy_develop:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - aws s3 sync dist/ s3://geotab-develop.link-labs.com --acl public-read --delete
+    - aws s3 sync dist/ s3://dev-geotab.link-labs.com --acl public-read --delete
   only:
     - develop
   environment:
