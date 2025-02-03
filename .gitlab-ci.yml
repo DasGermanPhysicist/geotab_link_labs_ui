@@ -1,5 +1,6 @@
 stages:
   - build
+  - verify
   - deploy
 
 variables:
@@ -22,14 +23,20 @@ build:
     - npm install
 
 lint:
-  stage: build
+  stage: verify
   image: node:20
   script:
     - npm run lint
   allow_failure: true
-  only:
-    - main
-    - develop
+  before_script:
+    - npm install
+
+audit:
+  stage: verify
+  image: node:20
+  script:
+    - npm run audit
+  allow_failure: true
   before_script:
     - npm install
 
@@ -37,7 +44,7 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; export AWS_S3_BUCKET=geotab.link-labs.com; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
     - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
     - main
