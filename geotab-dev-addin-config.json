@@ -1,0 +1,15 @@
+{
+	"name": "DEV Airfinder",
+	"supportEmail": "support@link-labs.com",
+	"version": "1.0",
+	"items": [
+		{
+			"url": "https://dev-geotab.link-labs.com",
+			"path": "",
+			"menuName": {
+				"en": "DEV Airfinder"
+			}
+		}
+	],
+	"isSigned": false
+}

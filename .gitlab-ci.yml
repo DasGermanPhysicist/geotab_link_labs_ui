@@ -2,11 +2,16 @@ stages:
   - build
   - deploy
 
+variables:
+  AWS_S3_BUCKET: ""
+  BUILD_ENV: ""
+
 build:
   stage: build
   image: node:20
   script:
-    - npm run build
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_ENV=production; export AWS_S3_BUCKET=geotab.link-labs.com; else export BUILD_ENV=develop; export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
+    - NODE_ENV=$BUILD_ENV npm run build
   artifacts:
     paths:
       - dist/
@@ -28,11 +33,11 @@ lint:
   before_script:
     - npm install
 
-deploy_production:
+deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - aws s3 sync dist/ s3://geotab.link-labs.com --acl public-read --delete
+    - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
     - main
   environment:
@@ -45,21 +50,4 @@ deploy_production:
     - echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
     - echo "[default]" > ~/.aws/config
     - echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
-
-deploy_develop:
-  stage: deploy
-  image: amazon/aws-cli:latest
-  script:
-    - aws s3 sync dist/ s3://dev-geotab.link-labs.com --acl public-read --delete
-  only:
-    - develop
-  environment:
-    name: develop
-  before_script:
-    - echo "Setting up AWS credentials"
-    - mkdir -p ~/.aws
-    - echo "[default]" > ~/.aws/credentials
-    - echo "aws_access_key_id = $AWS_ACCESS_KEY_ID" >> ~/.aws/credentials
-    - echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
-    - echo "[default]" > ~/.aws/config
-    - echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
+  
