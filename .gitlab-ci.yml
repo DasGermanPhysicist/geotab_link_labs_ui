@@ -11,9 +11,9 @@ build:
   stage: build
   image: node:20
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_ENV=production; else export BUILD_ENV=develop; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_CMD=build; else export BUILD_CMD=build_develop; fi
     - echo "Building for the $NODE_ENV environment...."
-    - NODE_ENV=$BUILD_ENV npm run build
+    - npm run $BUILD_CMD
   artifacts:
     paths:
       - dist/
