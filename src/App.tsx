@@ -208,10 +208,10 @@ function App() {
 
         {!loading && !error && selectedSiteId && (
           <div className="flex-1 flex relative">
-            {/* Mobile sidebar toggle button */}
+            {/* Mobile sidebar toggle button - moved 10% higher */}
             <button
               onClick={() => setShowSidebar(!showSidebar)}
-              className="md:hidden fixed bottom-4 right-4 z-50 bg-[#87B812] text-white p-3 rounded-full shadow-lg"
+              className="md:hidden fixed bottom-[40%] right-4 z-50 bg-[#87B812] text-white p-3 rounded-full shadow-lg"
             >
               {showSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
