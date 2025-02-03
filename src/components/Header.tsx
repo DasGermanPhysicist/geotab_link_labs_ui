@@ -9,6 +9,7 @@ interface HeaderProps {
   onViewChange: (showMap: boolean) => void;
   selectedSiteId: string;
   onSiteSelect: (siteId: string) => void;
+  showSearchInHeader?: boolean;
 }
 
 export function Header({
@@ -17,42 +18,56 @@ export function Header({
   showMapView,
   onViewChange,
   selectedSiteId,
-  onSiteSelect
+  onSiteSelect,
+  showSearchInHeader = true
 }: HeaderProps) {
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showOrgSelector, setShowOrgSelector] = useState(false);
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-[60]">
-        <div className="flex items-center justify-between max-w-[1800px] mx-auto">
-          <div className="flex items-center space-x-12">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 sticky top-0 z-[60]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between max-w-[1800px] mx-auto gap-4">
+          <div className="flex items-center justify-between md:space-x-12">
             <h1 className="text-2xl font-bold text-[#004780]">Link Labs</h1>
+            <button
+              onClick={() => setShowOrgSelector(!showOrgSelector)}
+              className="md:hidden text-gray-600"
+            >
+              {showOrgSelector ? <X className="w-6 h-6" /> : <Search className="w-6 h-6" />}
+            </button>
+          </div>
+
+          <div className={`${showOrgSelector ? 'block' : 'hidden'} md:block w-full md:w-auto`}>
             <OrgSiteSelector onSiteSelect={onSiteSelect} />
           </div>
-          <div className="flex items-center space-x-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="search"
-                placeholder="Search assets..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#87B812]"
-              />
-            </div>
+
+          <div className="flex items-center justify-between md:space-x-8">
+            {showSearchInHeader && (
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="search"
+                  placeholder="Search assets..."
+                  value={searchTerm}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#87B812]"
+                />
+              </div>
+            )}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 border border-gray-200 rounded-lg overflow-hidden">
                 <button
                   onClick={() => onViewChange(false)}
-                  className={`px-6 py-2 ${!showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
+                  className={`px-4 md:px-6 py-2 text-sm ${!showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={() => onViewChange(true)}
-                  className={`px-6 py-2 ${showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
+                  className={`px-4 md:px-6 py-2 text-sm ${showMapView ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'}`}
                 >
-                  Map View
+                  Map
                 </button>
               </div>
               <button
@@ -67,9 +82,9 @@ export function Header({
         </div>
       </header>
 
-      {/* Modal rendered at root level */}
+      {/* Help Modal */}
       {showHelpModal && (
-        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 99999 }}>
+        <div className="fixed inset-0 flex items-center justify-center z-[999]">
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowHelpModal(false)} />
           <div className="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex justify-between items-center mb-6">

@@ -7,6 +7,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { fetchTags, isAuthenticated, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
+import { Menu, X } from 'lucide-react';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 
@@ -26,6 +27,7 @@ function App() {
   const [assetViewType, setAssetViewType] = useState<AssetViewType>(() => 
     (localStorage.getItem('assetViewType') as AssetViewType) || 'all'
   );
+  const [showSidebar, setShowSidebar] = useState(true);
 
   useEffect(() => {
     localStorage.setItem('showMapView', showMapView.toString());
@@ -40,6 +42,12 @@ function App() {
       loadTags();
     }
   }, [authenticated, selectedSiteId]);
+
+  useEffect(() => {
+    if (window.innerWidth <= 768 && selectedAsset) {
+      setShowSidebar(false);
+    }
+  }, [selectedAsset]);
 
   const findSuperTagName = (supertagId: string | null) => {
     if (!supertagId) return null;
@@ -144,71 +152,114 @@ function App() {
     };
   }, [selectedAsset, filteredMarkers]);
 
+  const handleAssetSelect = (asset: ProcessedMarker | null) => {
+    setSelectedAsset(asset);
+    if (window.innerWidth <= 768) {
+      setShowSidebar(false);
+    }
+  };
+
   if (!authenticated) {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        showMapView={showMapView}
-        onViewChange={setShowMapView}
-        selectedSiteId={selectedSiteId}
-        onSiteSelect={setSelectedSiteId}
-      />
-
-      {loading && !selectedSiteId && (
-        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
-          <div className="text-xl text-gray-600">Select an organization and site to view assets</div>
+      {/* Map container - positioned absolutely to be behind everything */}
+      {!loading && !error && selectedSiteId && showMapView && (
+        <div className="fixed inset-0 z-0">
+          <Map 
+            center={mapConfig.center}
+            zoom={mapConfig.zoom}
+            markers={selectedAsset ? [selectedAsset] : filteredMarkers}
+          />
         </div>
       )}
 
-      {loading && selectedSiteId && (
-        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
-          <div className="text-xl text-gray-600">Loading assets...</div>
-        </div>
-      )}
+      {/* Main content wrapper - everything above the map */}
+      <div className="relative z-10 flex flex-col h-screen">
+        <Header 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          showMapView={showMapView}
+          onViewChange={setShowMapView}
+          selectedSiteId={selectedSiteId}
+          onSiteSelect={setSelectedSiteId}
+          showSearchInHeader={false}
+        />
 
-      {error && (
-        <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
-          <div className="text-xl text-red-600">{error}</div>
-        </div>
-      )}
-
-      {!loading && !error && selectedSiteId && (
-        <div className="flex h-[calc(100vh-64px)]">
-          <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto sticky top-[64px] h-[calc(100vh-64px)]">
-            <AssetList 
-              assets={filteredMarkers}
-              selectedAsset={selectedAsset}
-              onAssetSelect={setSelectedAsset}
-              assetViewType={assetViewType}
-              onAssetViewChange={setAssetViewType}
-            />
+        {loading && !selectedSiteId && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-xl text-gray-600">Select an organization and site to view assets</div>
           </div>
+        )}
 
-          <div className="flex-1 overflow-y-auto p-6">
-            {showMapView ? (
-              <div className="h-full">
-                <Map 
-                  center={mapConfig.center}
-                  zoom={mapConfig.zoom}
-                  markers={selectedAsset ? [selectedAsset] : filteredMarkers}
+        {loading && selectedSiteId && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-xl text-gray-600">Loading assets...</div>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-xl text-red-600">{error}</div>
+          </div>
+        )}
+
+        {!loading && !error && selectedSiteId && (
+          <div className="flex-1 flex relative">
+            {/* Mobile sidebar toggle button */}
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="md:hidden fixed bottom-4 right-4 z-50 bg-[#87B812] text-white p-3 rounded-full shadow-lg"
+            >
+              {showSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+
+            {/* Sidebar */}
+            <div className={`
+              ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+              transition-transform duration-300 ease-in-out
+              w-full md:w-80 bg-white/95 backdrop-blur-sm border-r border-gray-200 
+              fixed md:relative z-20 h-full
+              shadow-lg md:shadow-none
+            `}>
+              <div className="p-4 border-b border-gray-200 bg-white">
+                <div className="relative">
+                  <input
+                    type="search"
+                    placeholder="Search assets..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#87B812]"
+                  />
+                </div>
+              </div>
+              <div className="overflow-y-auto h-[calc(100%-60px)]">
+                <AssetList 
+                  assets={filteredMarkers}
+                  selectedAsset={selectedAsset}
+                  onAssetSelect={handleAssetSelect}
+                  assetViewType={assetViewType}
+                  onAssetViewChange={setAssetViewType}
                 />
               </div>
-            ) : (
-              <Dashboard 
-                selectedAsset={selectedAsset}
-                markers={filteredMarkers}
-                mapConfig={mapConfig}
-                onAssetSelect={setSelectedAsset}
-              />
+            </div>
+
+            {/* Main content - only show if not in map view */}
+            {!showMapView && (
+              <div className="flex-1 overflow-y-auto p-6 w-full bg-gray-50">
+                <Dashboard 
+                  selectedAsset={selectedAsset}
+                  markers={filteredMarkers}
+                  mapConfig={mapConfig}
+                  onAssetSelect={handleAssetSelect}
+                />
+              </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
