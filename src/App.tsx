@@ -4,10 +4,11 @@ import { Map } from './components/Map';
 import { AssetList } from './components/AssetList';
 import { Dashboard } from './components/Dashboard';
 import { LoginScreen } from './components/LoginScreen';
+import { QRScanner } from './components/QRScanner';
 import { fetchTags, isAuthenticated, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, QrCode } from 'lucide-react';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 
@@ -28,6 +29,7 @@ function App() {
     (localStorage.getItem('assetViewType') as AssetViewType) || 'all'
   );
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('showMapView', showMapView.toString());
@@ -159,6 +161,11 @@ function App() {
     }
   };
 
+  const handleQRScan = (macAddress: string) => {
+    setSearchTerm(macAddress);
+    setShowQRScanner(false);
+  };
+
   if (!authenticated) {
     return <LoginScreen onLogin={handleLogin} />;
   }
@@ -231,8 +238,15 @@ function App() {
                     placeholder="Search assets..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#87B812]"
+                    className="w-full pl-4 pr-12 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#87B812]"
                   />
+                  <button
+                    onClick={() => setShowQRScanner(true)}
+                    className="md:hidden absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Scan QR Code"
+                  >
+                    <QrCode className="w-5 h-5 text-gray-400 hover:text-[#87B812]" />
+                  </button>
                 </div>
               </div>
               <div className="overflow-y-auto h-[calc(100%-60px)]">
@@ -260,6 +274,14 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onScan={handleQRScan}
+          onClose={() => setShowQRScanner(false)}
+        />
+      )}
     </div>
   );
 }
