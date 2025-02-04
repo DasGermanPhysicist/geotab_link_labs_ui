@@ -18,27 +18,7 @@ const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 type AssetViewType = 'all' | 'supertags' | 'sensors';
 
 function App() {
-  const [authenticated, setAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const waitForAuthentication = async () => {
-      console.log("Waiting for authentication...");
-      while (!await isAuthenticated()) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-      console.log("Authenticated!");
-      setAuthenticated(true);
-    };
-
-    if (typeof geotab !== 'undefined') {
-      console.log("Running in Geotab Platform");
-      geotab.addin.AirfinderAddIn = GeotabLifecycle;
-      waitForAuthentication();
-    } else {
-      console.warn("Not running in Geotab Platform");
-    }
-  }, []);
-  // const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  const [authenticated, setAuthenticated] = useState(isAuthenticated());
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,27 +33,6 @@ function App() {
   );
   const [showSidebar, setShowSidebar] = useState(true);
   const [showQRScanner, setShowQRScanner] = useState(false);
-
-  // useEffect(() => {
-  //   const checkAuthentication = async () => {
-  //     // Wait for Geotab Lifecycle to authenticate with Platform...
-  //     console.log("waiting for authentication....")
-  //     while (!isAuthenticated()) {
-  //       await new Promise(resolve => setTimeout(resolve, 1000));
-  //     }
-  //     console.log("geotab authentication completed!")
-  //     setAuthenticated(true);
-  //   };
-
-  //   if (typeof geotab !== 'undefined') {
-  //     // Continue waiting for authentication when running in Geotab Platform.
-  //     checkAuthentication();
-  //   } else {
-  //     // Prompt user for password entry (by setting unauthenticated).
-  //     console.log("Prompting user for Login Screen...")
-  //     setAuthenticated(isAuthenticated());
-  //   }
-  // }, []);
 
   useEffect(() => {
     localStorage.setItem('showMapView', showMapView.toString());
@@ -212,10 +171,8 @@ function App() {
 
   // Attempt to initialize Geotab
   if (typeof geotab !== 'undefined') {
-    console.log("Running in Geotab Platform")
+    console.log("Running in Geotab Platform: Registering Geotab Event Hooks...")
     geotab.addin.AirfinderAddIn = GeotabLifecycle;
-  } else {
-    console.warn("Not running in Geotab Platform")
   }
 
   if (!authenticated) {
