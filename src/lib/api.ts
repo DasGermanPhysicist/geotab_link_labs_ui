@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://networkasset-conductor.link-labs.com';
+const NETWORK_ASSET_API_URL = import.meta.env.NETWORK_ASSET_API_URL;
 
 interface LoginCredentials {
   username: string;
@@ -72,7 +72,7 @@ export function getTagType(registrationToken: string): string {
 }
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: NETWORK_ASSET_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
