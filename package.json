@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build_develop": "vite build --mode develop",
+    "build_staging": "vite build --mode staging",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@types/leaflet": "^1.9.8",
+    "@types/node": "^22.13.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

@@ -1,28 +1,44 @@
 stages:
   - build
+  - verify
   - deploy
+
+variables:
+  AWS_S3_BUCKET: ""
+  BUILD_ENV: ""
 
 build:
   stage: build
   image: node:20
   script:
-    - npm run build
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_CMD=build; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export BUILD_CMD=build_staging; else export BUILD_CMD=build_develop; fi
+    - echo "Building for the $NODE_ENV environment...."
+    - npm run $BUILD_CMD
   artifacts:
     paths:
       - dist/
   only:
     - main
+    - develop
+    - staging
   before_script:
     - npm install
 
 lint:
-  stage: build
+  stage: verify
   image: node:20
   script:
     - npm run lint
   allow_failure: true
-  only:
-    - main
+  before_script:
+    - npm install
+
+audit:
+  stage: verify
+  image: node:20
+  script:
+    - npm audit
+  allow_failure: true
   before_script:
     - npm install
 
@@ -30,9 +46,13 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - aws s3 sync dist/ s3://geotab.link-labs.com --acl public-read --delete
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
+    - echo "Deploying to $AWS_S3_BUCKET..."
+    - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
     - main
+    - develop
+    - staging
   environment:
     name: production
   before_script:
