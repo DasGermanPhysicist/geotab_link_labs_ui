@@ -180,14 +180,6 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
   }
 }
 
-export function isAuthenticated(): boolean {
-  return !!localStorage.getItem('authToken');
-}
-
-export function logout(): void {
-  localStorage.removeItem('authToken');
-}
-
 export function getBatteryInfo(tag: Tag): BatteryInfo {
   const batteryStatusNum = Number(tag.batteryStatus);
   
