@@ -1,26 +1,11 @@
-interface GeotabSession {
-    /**
-     * Proxy handler object.
-     */
-    handler: {
-        get: (e: any, r: any, n: any) => any;
-    };
+import axios from "axios";
 
-    /**
-     * Target object containing session details.
-     * https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
-     */
-    target: {
+interface GeotabSession {
+    // https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
         database: string;
         date: string;
         sessionId: string;
         userName: string;
-    };
-
-    /**
-     * Indicates if the session is revoked.
-     */
-    isRevoked: boolean;
 }
 
 
@@ -143,6 +128,37 @@ interface PageState {
 
 type CallbackFunction = () => void;
 
+const ACCESS_API_URL = import.meta.env.VITE_ACCESS_API_URL;
+
+const access_api = axios.create({
+    baseURL: ACCESS_API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+export async function geotab_sso({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
+    try {
+        const response = await access_api.post('/access/geotab/sso', {
+            data: {
+                username: userName,
+                database: database,
+                sessionId: sessionId
+            }
+        });
+
+        if (response.status === 200 && response.data.token) {
+            const authHeader = `Bearer ${response.data.token}`;
+            localStorage.setItem('authToken', authHeader);
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        console.error('Login failed:', error);
+        return false;
+    }
+}
 
 interface GeotabLifecycleMethods {
     /**
@@ -178,10 +194,10 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     // https://developers.geotab.com/myGeotab/addIns/developingAddIns#geotab-add-in-page-life-cycle
 
     return {
-        initialize(api, state, callback) {
-            console.log("start initialize")
-            console.dir(api, { depth: null, colors: true });
-            console.dir(state, { depth: null, colors: true });
+        initialize(api, _state, callback) {
+            console.log("Airfinder Add-In initialization...")
+            // console.dir(api, { depth: null, colors: true });
+            // console.dir(state, { depth: null, colors: true });
 
             api.getSession(
                 (session: any) => {
@@ -198,16 +214,16 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             callback();
         },
 
-        focus(api, state) {
-            console.log("start focus")
-            console.dir(api, { depth: null, colors: true });
-            console.dir(state, { depth: null, colors: true });
+        focus(_api, _state) {
+            // console.log("start focus")
+            // console.dir(api, { depth: null, colors: true });
+            // console.dir(state, { depth: null, colors: true });
         },
         
-        blur(api, state) {
-            console.log("start blur")
-            console.dir(api, { depth: null, colors: true });
-            console.dir(state, { depth: null, colors: true });
+        blur(_api, _state) {
+            // console.log("start blur")
+            // console.dir(api, { depth: null, colors: true });
+            // console.dir(state, { depth: null, colors: true });
         }
     };
 };
