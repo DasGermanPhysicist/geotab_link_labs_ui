@@ -5,7 +5,7 @@ interface LoadingScreenProps {
     onLogin: () => void;
 }
 
-export async function LoadingScreen({ onLogin }: LoadingScreenProps) {
+export function LoadingScreen({ onLogin }: LoadingScreenProps) {
 
     const waitForAuthentication = async () => {
         console.log("Waiting for authentication...");
@@ -16,7 +16,7 @@ export async function LoadingScreen({ onLogin }: LoadingScreenProps) {
         onLogin();
     };
 
-    await waitForAuthentication();
+    waitForAuthentication();
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
