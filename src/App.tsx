@@ -34,6 +34,24 @@ function App() {
   const [showQRScanner, setShowQRScanner] = useState(false);
 
   useEffect(() => {
+    const checkAuthentication = async () => {
+      // Wait for Geotab Lifecycle to authenticate with Platform...
+      while (!isAuthenticated()) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      setAuthenticated(true);
+    };
+
+    if (typeof geotab !== 'undefined') {
+      // Continue waiting for authentication when running in Geotab Platform.
+      checkAuthentication();
+    } else {
+      // Prompt user for password entry (by setting unauthenticated).
+      setAuthenticated(isAuthenticated());
+    }
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('showMapView', showMapView.toString());
   }, [showMapView]);
 
