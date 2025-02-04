@@ -177,7 +177,8 @@ function App() {
     console.warn("Not running in Geotab Platform")
   }
 
-  if (!authenticated) {
+  if (!authenticated && typeof geotab == 'undefined') {
+    // Don't load login page in Geotab Platform.
     return <LoginScreen onLogin={handleLogin} />;
   }
 
