@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const NETWORK_ASSET_API_URL = import.meta.env.NETWORK_ASSET_API_URL;
+const NETWORK_ASSET_API_URL = process.env.NETWORK_ASSET_API_URL;
 
 interface LoginCredentials {
   username: string;

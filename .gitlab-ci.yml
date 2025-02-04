@@ -46,7 +46,7 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; ENV_NAME=production; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; ENV_NAME=staging; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; ENV_NAME=develop; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
     - echo "Deploying to $AWS_S3_BUCKET..."
     - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
@@ -54,7 +54,7 @@ deploy:
     - develop
     - staging
   environment:
-    name: $ENV_NAME
+    name: $CI_COMMIT_BRANCH
   before_script:
     - echo "Setting up AWS credentials"
     - mkdir -p ~/.aws
