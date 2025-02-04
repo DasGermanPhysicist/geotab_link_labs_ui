@@ -20,16 +20,19 @@ function App() {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    const checkAuthentication = async () => {
-      console.log("Check if authenticated...")
-      const authStatus = await isAuthenticated();
-      setAuthenticated(authStatus);
+    const waitForAuthentication = async () => {
+      console.log("Waiting for authentication...");
+      while (!await isAuthenticated()) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      console.log("Authenticated!");
+      setAuthenticated(true);
     };
 
     if (typeof geotab !== 'undefined') {
       console.log("Running in Geotab Platform");
       geotab.addin.AirfinderAddIn = GeotabLifecycle;
-      checkAuthentication();
+      waitForAuthentication();
     } else {
       console.warn("Not running in Geotab Platform");
     }
