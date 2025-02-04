@@ -54,7 +54,7 @@ deploy:
     - develop
     - staging
   environment:
-    name: production
+    name: $ENV_NAME
   before_script:
     - echo "Setting up AWS credentials"
     - mkdir -p ~/.aws
