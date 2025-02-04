@@ -194,15 +194,28 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     // https://developers.geotab.com/myGeotab/addIns/developingAddIns#geotab-add-in-page-life-cycle
 
     return {
-        initialize(api, _state, callback) {
+        async initialize(api, _state, callback) {
             console.log("Airfinder Add-In initialization...")
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
 
             api.getSession(
-                (session: any) => {
+                async (session: GeotabSession) => {
                     console.log("session:")
                     console.dir(session, { depth: null, colors: true });
+
+                    try {
+                        const isAuthenticated = await geotab_sso(session);
+                        if (isAuthenticated) {
+                            console.log('Successfully authenticated with Geotab SSO.');
+                            // Proceed with further initialization if needed
+                        } else {
+                            console.warn('Failed to authenticate with Geotab SSO.');
+                            // Handle authentication failure, e.g., show login screen
+                        }
+                    } catch (error) {
+                        console.error('Initialization failed:', error);
+                    }
                 },
                 false
             );
