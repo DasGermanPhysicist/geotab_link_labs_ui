@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://networkasset-conductor.link-labs.com';
+const NETWORK_ASSET_API_URL = import.meta.env.VITE_NETWORK_ASSET_API_URL;
+
 
 interface LoginCredentials {
   username: string;
@@ -71,14 +72,14 @@ export function getTagType(registrationToken: string): string {
   }
 }
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
+const network_asset_api = axios.create({
+  baseURL: NETWORK_ASSET_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-api.interceptors.request.use((config) => {
+network_asset_api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {
     config.headers.Authorization = token;
@@ -90,7 +91,7 @@ export async function login({ username, password }: LoginCredentials): Promise<b
   try {
     const authHeader = 'Basic ' + btoa(`${username}:${password}`);
     
-    const response = await api.get('/networkAsset/airfinder/organizations', {
+    const response = await network_asset_api.get('/networkAsset/airfinder/organizations', {
       headers: {
         'Authorization': authHeader
       }
@@ -110,7 +111,7 @@ export async function login({ username, password }: LoginCredentials): Promise<b
 
 export async function fetchOrganizations(): Promise<Organization[]> {
   try {
-    const response = await api.get('/networkAsset/airfinder/organizations');
+    const response = await network_asset_api.get('/networkAsset/airfinder/organizations');
     const organizations = (response.data || []).map((org: any) => ({
       id: String(org.id || ''),
       name: String(org.value || org.name || 'Unnamed Organization')
@@ -126,7 +127,7 @@ export async function fetchOrganizations(): Promise<Organization[]> {
 
 export async function fetchCurrentUserSites(): Promise<Site[]> {
   try {
-    const response = await api.get('/networkAsset/airfinder/sites?currentUser=true');
+    const response = await network_asset_api.get('/networkAsset/airfinder/sites?currentUser=true');
     return (response.data || []).map((site: any) => ({
       id: String(site.id || ''),
       name: String(site.value || site.name || site.siteName || 'Unnamed Site')
@@ -141,7 +142,7 @@ export async function fetchCurrentUserSites(): Promise<Site[]> {
 
 export async function fetchSites(organizationId: string): Promise<Site[]> {
   try {
-    const response = await api.get(`/networkAsset/airfinder/organization/${organizationId}/sites`);
+    const response = await network_asset_api.get(`/networkAsset/airfinder/organization/${organizationId}/sites`);
     return (response.data || []).map((site: any) => ({
       id: String(site.id || ''),
       name: String(site.value || site.name || site.siteName || 'Unnamed Site')
@@ -166,7 +167,7 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
       includeGeotabInfo: 'true'
     });
 
-    const response = await api.get(`/networkAsset/airfinder/v4/tags?${params}`);
+    const response = await network_asset_api.get(`/networkAsset/airfinder/v4/tags?${params}`);
     return (response.data || []).map((tag: any) => ({
       ...tag,
       geotabSerialNumber: tag.geotabSerialNumber || tag.geotabSerial || null
@@ -177,14 +178,6 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
     });
     throw error;
   }
-}
-
-export function isAuthenticated(): boolean {
-  return !!localStorage.getItem('authToken');
-}
-
-export function logout(): void {
-  localStorage.removeItem('authToken');
 }
 
 export function getBatteryInfo(tag: Tag): BatteryInfo {

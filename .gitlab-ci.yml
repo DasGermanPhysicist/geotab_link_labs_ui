@@ -54,7 +54,7 @@ deploy:
     - develop
     - staging
   environment:
-    name: production
+    name: $CI_COMMIT_BRANCH
   before_script:
     - echo "Setting up AWS credentials"
     - mkdir -p ~/.aws
