@@ -11,7 +11,7 @@ build:
   stage: build
   image: node:20
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_CMD=build; else export BUILD_CMD=build_develop; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export BUILD_CMD=build; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export BUILD_CMD=build_staging; else export BUILD_CMD=build_develop; fi
     - echo "Building for the $NODE_ENV environment...."
     - npm run $BUILD_CMD
   artifacts:
@@ -20,6 +20,7 @@ build:
   only:
     - main
     - develop
+    - staging
   before_script:
     - npm install
 
@@ -45,12 +46,13 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
     - echo "Deploying to $AWS_S3_BUCKET..."
     - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
     - main
     - develop
+    - staging
   environment:
     name: production
   before_script:
@@ -61,4 +63,3 @@ deploy:
     - echo "aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" >> ~/.aws/credentials
     - echo "[default]" > ~/.aws/config
     - echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
-  
