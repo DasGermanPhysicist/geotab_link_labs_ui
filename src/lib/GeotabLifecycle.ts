@@ -140,11 +140,9 @@ const access_api = axios.create({
 export async function geotab_sso({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
     try {
         const response = await access_api.post('/access/geotab/sso', {
-            data: {
-                username: userName,
-                database: database,
-                sessionId: sessionId
-            }
+            username: userName,
+            database: database,
+            sessionId: sessionId
         });
 
         if (response.status === 200 && response.data.token) {
