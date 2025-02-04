@@ -46,7 +46,7 @@ deploy:
   stage: deploy
   image: amazon/aws-cli:latest
   script:
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; --exclude experimental elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
     - echo "Deploying to $AWS_S3_BUCKET..."
     - aws s3 sync dist/ s3://$AWS_S3_BUCKET --acl public-read --delete
   only:
