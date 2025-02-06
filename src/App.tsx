@@ -172,7 +172,7 @@ function App() {
   // Attempt to initialize Geotab
   if (typeof geotab !== 'undefined') {
     console.log("Running in Geotab Platform: Registering Geotab Event Hooks...")
-    geotab.addin.AirfinderAddIn = GeotabLifecycle;
+    geotab.addin.AirfinderStagingAddIn = GeotabLifecycle;
   }
 
   if (!authenticated) {
