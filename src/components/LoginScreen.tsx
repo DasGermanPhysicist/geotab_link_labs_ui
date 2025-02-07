@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { login } from '../lib/api';
+import { isAuthenticated } from '../lib/auth';
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -29,6 +30,18 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       setLoading(false);
     }
   };
+
+  const waitForAuthentication = async () => {
+    console.log("Waiting for Geotab Initialization...");
+    while (!isAuthenticated()) {
+        console.log("waiting 1 second...")
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    console.log("Geotab SSO completed... Authenticated!");
+    onLogin();
+  };
+
+  waitForAuthentication();
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
