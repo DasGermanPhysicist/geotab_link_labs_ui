@@ -1,6 +1,8 @@
 import React from 'react';
 import { isAuthenticated } from '../lib/auth';
 
+// NOTE: Not currently in use, logic moved to login page
+
 interface LoadingScreenProps {
     onLogin: () => void;
 }
@@ -9,7 +11,7 @@ export function LoadingScreen({ onLogin }: LoadingScreenProps) {
 
     const waitForAuthentication = async () => {
         console.log("Waiting for Geotab Initialization...");
-        while (!await isAuthenticated()) {
+        while (!isAuthenticated()) {
             console.log("waiting 1 second...")
             await new Promise(resolve => setTimeout(resolve, 1000));
         }

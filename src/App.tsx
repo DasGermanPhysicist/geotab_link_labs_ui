@@ -179,7 +179,7 @@ function App() {
     // if (typeof geotab === 'undefined') {
       return <LoginScreen onLogin={handleLogin} />;
     // } else {
-      // return <LoadingScreen onLogin={handleLogin} />;
+    //   return <LoadingScreen onLogin={handleLogin} />;
     // }
   }
 
