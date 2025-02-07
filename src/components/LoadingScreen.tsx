@@ -1,6 +1,8 @@
 import React from 'react';
 import { isAuthenticated } from '../lib/auth';
 
+// NOTE: Not currently in use, logic moved to login page
+
 interface LoadingScreenProps {
     onLogin: () => void;
 }
