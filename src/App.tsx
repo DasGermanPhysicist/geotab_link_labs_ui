@@ -176,11 +176,11 @@ function App() {
   }
 
   if (!authenticated) {
-    if (typeof geotab === 'undefined') {
+    // if (typeof geotab === 'undefined') {
       return <LoginScreen onLogin={handleLogin} />;
-    } else {
-      return <LoadingScreen onLogin={handleLogin} />;
-    }
+    // } else {
+    //   return <LoadingScreen onLogin={handleLogin} />;
+    // }
   }
 
   return (
