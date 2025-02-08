@@ -11,7 +11,6 @@ import type { ProcessedMarker } from './types/assets';
 import { Menu, X, QrCode } from 'lucide-react';
 import { GeotabLifecycle } from './lib/GeotabLifecycle';
 import { isAuthenticated } from './lib/auth';
-import { LoadingScreen } from './components/LoadingScreen'; // Import the LoadingScreen component
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 

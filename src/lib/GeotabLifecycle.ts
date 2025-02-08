@@ -183,7 +183,7 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
 
-            ensure_conductor_authorization(api);
+            await ensure_conductor_authorization(api);
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
@@ -196,7 +196,7 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
 
-            ensure_conductor_authorization(api);
+            // ensure_conductor_authorization(api);
         },
         
         blur(_api, _state) {
