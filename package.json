@@ -9,8 +9,9 @@
     "build_develop": "vite build --mode develop",
     "build_staging": "vite build --mode staging",
     "build_root_production": "vite build --mode root_production",
+    "build_root_develop": "vite build --mode root_develop",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --mode root_production"
   },
   "dependencies": {
     "axios": "^1.6.7",
