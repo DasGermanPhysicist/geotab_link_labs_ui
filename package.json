@@ -8,6 +8,7 @@
     "build": "vite build",
     "build_develop": "vite build --mode develop",
     "build_staging": "vite build --mode staging",
+    "build_root_production": "vite build --mode root_production",
     "lint": "eslint .",
     "preview": "vite preview"
   },
