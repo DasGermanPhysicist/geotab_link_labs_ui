@@ -155,12 +155,12 @@ async function ensure_conductor_authorization(api: GeotabAPI) {
         return;
     }
     api.getSession(
-        async (session: GeotabSession) => {
+        (session: GeotabSession) => {
             console.log("session:")
             console.dir(session, { depth: null, colors: true });
 
             try {
-                if (await geotab_sso(session)) {
+                if (geotab_sso(session)) {
                     console.log('Successfully authenticated with Geotab SSO.');
                 } else {
                     console.warn('Failed to authenticate with Geotab SSO.');
@@ -180,21 +180,16 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     return {
         initialize(api, _state, addInReady) {
             console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
-            // console.dir(api, { depth: null, colors: true });
-            // console.dir(state, { depth: null, colors: true });
+            ensure_conductor_authorization(api);
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
             // be called due to the callback method being called in the initialize method.
-            ensure_conductor_authorization(api);
             addInReady();
         },
 
-        focus(api, _state) {
+        focus(_api, _state) {
             console.log("Geotab Focus Lifecycle: Airfinder Add-In");
-            // console.dir(api, { depth: null, colors: true });
-            // console.dir(state, { depth: null, colors: true });
-
             // ensure_conductor_authorization(api);
         },
         
