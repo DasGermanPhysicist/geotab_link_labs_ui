@@ -178,17 +178,24 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     // https://developers.geotab.com/myGeotab/addIns/developingAddIns#geotab-add-in-page-life-cycle
 
     return {
-        async initialize(api, _state, callback) {
+        initialize(api, _state, addInReady) {
             console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
 
-            await ensure_conductor_authorization(api);
-
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
             // be called due to the callback method being called in the initialize method.
-            callback();
+            ensure_conductor_authorization(api)
+                .then(() => {
+                    console.log("Geotab SSO Completed!");
+                    addInReady();
+                })
+                .catch((error_reason) => {
+                    console.log("Geotab SSO Failed! " + error_reason);
+                    addInReady();
+                })
+            ;
         },
 
         focus(api, _state) {
