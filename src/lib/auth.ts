@@ -18,6 +18,7 @@ const access_api = axios.create({
 });
 
 export function isAuthenticated(): boolean {
+  // TODO: Check JWT token is not expired.
   return !!localStorage.getItem('authToken');
 }
 
@@ -25,24 +26,26 @@ export function logout(): void {
   localStorage.removeItem('authToken');
 }
 
-export function geotab_sso({ userName, database, sessionId }: GeotabSession): boolean {
-    let isAuthenticated = false;
+export async function geotab_sso({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
+    try {
+        const response = await access_api.post('/access/geotab/sso',
+            {
+                username: userName,
+                database: database,
+                sessionId: sessionId
+            }
+        );
 
-    access_api.post('/access/geotab/sso', {
-        username: userName,
-        database: database,
-        sessionId: sessionId
-    })
-    .then(response => {
         if (response.status === 200 && response.data.token) {
             const authHeader = `Bearer ${response.data.token}`;
             localStorage.setItem('authToken', authHeader);
-            isAuthenticated = true;
+            return true;
         }
-    })
-    .catch(error => {
-        console.error('Login failed:', error);
-    });
 
-    return isAuthenticated;
+        return false;
+    } catch (error) {
+        console.error('Login failed:', error);
+        return false;
+    }
 }
+

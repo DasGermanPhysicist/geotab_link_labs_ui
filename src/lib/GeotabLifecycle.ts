@@ -149,7 +149,7 @@ interface GeotabLifecycleMethods {
     blur(api: GeotabAPI, state: PageState): void;
 }
 
-async function ensure_conductor_authorization(api: GeotabAPI) {
+async function ensure_conductor_authorization(api: GeotabAPI, addInReady: CallbackFunction) {
     if (isAuthenticated()) {
         // Nothing to do, user is authenticated.
         return;
@@ -160,12 +160,18 @@ async function ensure_conductor_authorization(api: GeotabAPI) {
             console.dir(session, { depth: null, colors: true });
 
             try {
-                if (geotab_sso(session)) {
-                    console.log('Successfully authenticated with Geotab SSO.');
-                } else {
-                    console.warn('Failed to authenticate with Geotab SSO.');
-                    // Handle authentication failure, e.g., show login screen
-                }
+                geotab_sso(session).then(
+                    (successfully_authenticated) => {
+                        if (successfully_authenticated) {
+                            console.log('Successfully authenticated with Geotab SSO.');
+                        } else {
+                            console.warn('Failed to authenticate with Geotab SSO.');
+                        }
+                        if (!!addInReady) {
+                            addInReady()
+                        }
+                    }
+                );
             } catch (error) {
                 console.error('Unexpected error authenticating to Link Labs:', error);
             }
@@ -180,12 +186,12 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     return {
         initialize(api, _state, addInReady) {
             console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
-            ensure_conductor_authorization(api);
+            ensure_conductor_authorization(api, addInReady);
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
             // be called due to the callback method being called in the initialize method.
-            addInReady();
+            // addInReady();
         },
 
         focus(_api, _state) {
