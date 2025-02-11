@@ -25,23 +25,24 @@ export function logout(): void {
   localStorage.removeItem('authToken');
 }
 
-export async function geotab_sso({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
-    try {
-        const response = await access_api.post('/access/geotab/sso', {
-            username: userName,
-            database: database,
-            sessionId: sessionId
-        });
+export function geotab_sso({ userName, database, sessionId }: GeotabSession): boolean {
+    let isAuthenticated = false;
 
+    access_api.post('/access/geotab/sso', {
+        username: userName,
+        database: database,
+        sessionId: sessionId
+    })
+    .then(response => {
         if (response.status === 200 && response.data.token) {
             const authHeader = `Bearer ${response.data.token}`;
             localStorage.setItem('authToken', authHeader);
-            return true;
+            isAuthenticated = true;
         }
-
-        return false;
-    } catch (error) {
+    })
+    .catch(error => {
         console.error('Login failed:', error);
-        return false;
-    }
+    });
+
+    return isAuthenticated;
 }
