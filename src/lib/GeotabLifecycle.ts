@@ -186,16 +186,8 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
             // be called due to the callback method being called in the initialize method.
-            ensure_conductor_authorization(api)
-                .then(() => {
-                    console.log("Geotab SSO Completed!");
-                    addInReady();
-                })
-                .catch((error_reason) => {
-                    console.log("Geotab SSO Failed! " + error_reason);
-                    addInReady();
-                })
-            ;
+            ensure_conductor_authorization(api);
+            addInReady();
         },
 
         focus(api, _state) {
