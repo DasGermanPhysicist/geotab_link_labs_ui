@@ -24,9 +24,9 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username: userName,
-                    database: database,
-                    sessionId: sessionId
+                    username: session.userName,
+                    database: session.database,
+                    sessionId: session.sessionId
                 })
             });
 
