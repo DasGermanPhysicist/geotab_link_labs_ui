@@ -1,5 +1,5 @@
 import axios from "axios";
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 
 export interface GeotabSession {
     // https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
@@ -23,21 +23,22 @@ export function isAuthenticated(): boolean {
     if (!token) {
       return false;
     }
+ 
+    return true;
+    // try {
+    //   const decodedToken: any = jwt.decode(token);
+    //   const currentTime = Math.floor(Date.now() / 1000);
   
-    try {
-      const decodedToken: any = jwt.decode(token);
-      const currentTime = Math.floor(Date.now() / 1000);
+    //   // Check if the token is expired
+    //   if (decodedToken.exp < currentTime) {
+    //     return false;
+    //   }
   
-      // Check if the token is expired
-      if (decodedToken.exp < currentTime) {
-        return false;
-      }
-  
-      return true;
-    } catch (error) {
-      console.error("Invalid token:", error);
-      return false;
-    }
+    //   return true;
+    // } catch (error) {
+    //   console.error("Invalid token:", error);
+    //   return false;
+    // }
   }
 
 export function logout(): void {
