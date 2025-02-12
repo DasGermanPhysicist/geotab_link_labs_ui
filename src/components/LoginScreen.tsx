@@ -31,17 +31,17 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   };
 
-  const waitForAuthentication = async () => {
-    console.log("Waiting for Geotab Initialization...");
-    while (!isAuthenticated()) {
-        console.log("waiting 1 second...")
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    console.log("Geotab SSO completed... Authenticated!");
-    onLogin();
-  };
+  // const waitForAuthentication = async () => {
+  //   console.log("Waiting for Geotab Initialization...");
+  //   while (!isAuthenticated()) {
+  //       console.log("waiting 1 second...")
+  //       await new Promise(resolve => setTimeout(resolve, 1000));
+  //   }
+  //   console.log("Geotab SSO completed... Authenticated!");
+  //   onLogin();
+  // };
 
-  waitForAuthentication();
+  // waitForAuthentication();
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

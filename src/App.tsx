@@ -4,6 +4,7 @@ import { Map } from './components/Map';
 import { AssetList } from './components/AssetList';
 import { Dashboard } from './components/Dashboard';
 import { LoginScreen } from './components/LoginScreen';
+import { LoadingScreen } from './components/LoadingScreen';
 import { QRScanner } from './components/QRScanner';
 import { fetchTags, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
@@ -168,11 +169,11 @@ function App() {
   };
 
   if (!authenticated) {
-    // if (typeof geotab === 'undefined') {
+    if (typeof geotab === 'undefined') {
       return <LoginScreen onLogin={handleLogin} />;
-    // } else {
-    //   return <LoadingScreen onLogin={handleLogin} />;
-    // }
+    } else {
+      return <LoadingScreen onLogin={handleLogin} />;
+    }
   }
 
   return (

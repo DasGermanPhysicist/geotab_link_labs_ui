@@ -149,9 +149,10 @@ interface GeotabLifecycleMethods {
     blur(api: GeotabAPI, state: PageState): void;
 }
 
-async function ensure_conductor_authorization(api: GeotabAPI, addInReady: CallbackFunction) {
+async function ensure_linklabs_authorization(api: GeotabAPI, addInReady: CallbackFunction) {
     const callAddInReady = () => {
         if (!!addInReady) {
+            console.log("Calling Add-In Ready...")
             addInReady()
         }
     }
@@ -190,7 +191,7 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     return {
         initialize(api, _state, addInReady) {
             console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
-            ensure_conductor_authorization(api, addInReady);
+            ensure_linklabs_authorization(api, addInReady);
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
