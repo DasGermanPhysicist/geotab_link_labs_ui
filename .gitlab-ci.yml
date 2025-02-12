@@ -47,7 +47,7 @@ deploy:
   image: amazon/aws-cli:latest
   script:
     - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_BUCKET=geotab.link-labs.com; elif [ "$CI_COMMIT_BRANCH" == "staging" ]; then export AWS_S3_BUCKET=geotab.link-labs.com/experimental; else export AWS_S3_BUCKET=dev-geotab.link-labs.com; fi
-    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_OPTS="--include \"dist/*\""; else export AWS_S3_OPTS=""; fi
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then export AWS_S3_OPTS="--include \"dist/*\" --exclude \"*experimental/*\""; else export AWS_S3_OPTS=""; fi
     - echo "Deploying to $AWS_S3_BUCKET with $AWS_S3_OPTS..." 
     - aws s3 sync dist/ s3://$AWS_S3_BUCKET $AWS_S3_OPTS --acl public-read --delete
   only:
