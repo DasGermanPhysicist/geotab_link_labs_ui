@@ -150,8 +150,14 @@ interface GeotabLifecycleMethods {
 }
 
 async function ensure_conductor_authorization(api: GeotabAPI, addInReady: CallbackFunction) {
+    const callAddInReady = () => {
+        if (!!addInReady) {
+            addInReady()
+        }
+    }
     if (isAuthenticated()) {
         // Nothing to do, user is authenticated.
+        callAddInReady();
         return;
     }
     api.getSession(
@@ -167,9 +173,7 @@ async function ensure_conductor_authorization(api: GeotabAPI, addInReady: Callba
                         } else {
                             console.warn('Failed to authenticate with Geotab SSO.');
                         }
-                        if (!!addInReady) {
-                            addInReady()
-                        }
+                        callAddInReady();
                     }
                 );
             } catch (error) {
