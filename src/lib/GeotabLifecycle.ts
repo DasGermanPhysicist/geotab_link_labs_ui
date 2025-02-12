@@ -1,4 +1,4 @@
-import { geotab_sso, GeotabSession, isAuthenticated } from "./auth";
+import { geotab_sso_login, GeotabSession, isAuthenticated } from "./auth";
 
 /**
  * Interface representing the Geotab API.
@@ -167,7 +167,7 @@ async function ensure_linklabs_authorization(api: GeotabAPI, addInReady: Callbac
             // console.dir(session, { depth: null, colors: true });
 
             try {
-                geotab_sso(session).then(
+                geotab_sso_login(session).then(
                     (successfully_authenticated) => {
                         if (successfully_authenticated) {
                             // console.log('Successfully authenticated with Geotab SSO.');
