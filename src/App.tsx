@@ -171,9 +171,9 @@ function App() {
 
   if (!authenticated) {
     if (runningInGeotab()) {
-      return <LoginScreen onLogin={handleLogin} />;
-    } else {
       return <LoadingScreen onLogin={handleLogin} />;
+    } else {
+      return <LoginScreen onLogin={handleLogin} />;
     }
   }
 
