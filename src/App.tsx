@@ -11,6 +11,7 @@ import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
 import { Menu, X, QrCode } from 'lucide-react';
 import { isAuthenticated } from './lib/auth';
+import { runningInGeotab } from './lib/geotab';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 
@@ -169,10 +170,10 @@ function App() {
   };
 
   if (!authenticated) {
-    if (typeof geotab === 'undefined') {
-      return <LoginScreen onLogin={handleLogin} />;
-    } else {
+    if (runningInGeotab()) {
       return <LoadingScreen onLogin={handleLogin} />;
+    } else {
+      return <LoginScreen onLogin={handleLogin} />;
     }
   }
 
