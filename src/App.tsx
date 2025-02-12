@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Map } from './components/Map';
 import { AssetList } from './components/AssetList';
@@ -14,6 +14,7 @@ import { isAuthenticated } from './lib/auth';
 import { runningInGeotab } from './lib/geotab';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 type AssetViewType = 'all' | 'supertags' | 'sensors';
 
@@ -33,6 +34,7 @@ function App() {
   );
   const [showSidebar, setShowSidebar] = useState(true);
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('showMapView', showMapView.toString());
@@ -42,11 +44,44 @@ function App() {
     localStorage.setItem('assetViewType', assetViewType);
   }, [assetViewType]);
 
+  const loadTags = useCallback(async (isBackground: boolean = false) => {
+    if (!selectedSiteId) return;
+    
+    try {
+      if (!isBackground) {
+        setLoading(true);
+      } else {
+        setIsBackgroundLoading(true);
+      }
+      
+      const data = await fetchTags(selectedSiteId);
+      setTags(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load assets');
+      console.error(err);
+    } finally {
+      if (!isBackground) {
+        setLoading(false);
+      } else {
+        setIsBackgroundLoading(false);
+      }
+    }
+  }, [selectedSiteId]);
+
   useEffect(() => {
     if (authenticated && selectedSiteId) {
       loadTags();
+
+      // Set up automatic refresh
+      const intervalId = setInterval(() => {
+        loadTags(true); // Pass true to indicate background loading
+      }, REFRESH_INTERVAL);
+
+      // Clean up interval on unmount or when dependencies change
+      return () => clearInterval(intervalId);
     }
-  }, [authenticated, selectedSiteId]);
+  }, [authenticated, selectedSiteId, loadTags]);
 
   useEffect(() => {
     if (window.innerWidth <= 768 && selectedAsset) {
@@ -62,22 +97,6 @@ function App() {
 
   const findLeashedTags = (nodeAddress: string) => {
     return tags.filter(tag => tag.sourceSupertagId === nodeAddress);
-  };
-
-  const loadTags = async () => {
-    if (!selectedSiteId) return;
-    
-    try {
-      setLoading(true);
-      const data = await fetchTags(selectedSiteId);
-      setTags(data);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load assets');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const processedMarkers = useMemo(() => {

@@ -21,7 +21,7 @@ L.Icon.Default.mergeOptions({
 
 // Create custom colored marker icon
 const CustomIcon = L.divIcon({
-  className: 'custom-marker',
+  className: 'll_leaflet-marker-icon',
   html: `<svg width="25" height="41" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <path d="M50 0C29.86 0 13.5 16.36 13.5 36.5c0 28.875 36.5 63.5 36.5 63.5s36.5-34.625 36.5-63.5C86.5 16.36 70.14 0 50 0z" fill="#87B812"/>
     <circle cx="50" cy="36.5" r="16.5" fill="white"/>
@@ -33,7 +33,7 @@ const CustomIcon = L.divIcon({
 
 // Selected marker icon with different color
 const SelectedIcon = L.divIcon({
-  className: 'custom-marker',
+  className: 'll_leaflet-marker-icon',
   html: `<svg width="25" height="41" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <path d="M50 0C29.86 0 13.5 16.36 13.5 36.5c0 28.875 36.5 63.5 36.5 63.5s36.5-34.625 36.5-63.5C86.5 16.36 70.14 0 50 0z" fill="#004780"/>
     <circle cx="50" cy="36.5" r="16.5" fill="white"/>
@@ -54,7 +54,7 @@ const createClusterCustomIcon = function (cluster: any) {
   };
 
   return L.divIcon({
-    html: `<div class="cluster-icon" style="
+    html: `<div class="ll_custom-marker-cluster" style="
       width: ${sizeMap[size].width}px;
       height: ${sizeMap[size].height}px;
       background-color: #87B812;
@@ -67,7 +67,7 @@ const createClusterCustomIcon = function (cluster: any) {
       font-weight: bold;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     ">${count}</div>`,
-    className: 'custom-marker-cluster',
+    className: 'll_custom-marker-cluster',
     iconSize: L.point(sizeMap[size].width, sizeMap[size].height),
     iconAnchor: [sizeMap[size].width / 2, sizeMap[size].height / 2]
   });
@@ -180,25 +180,26 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   };
 
   return (
-    <div className="relative h-full [&_.leaflet-control-container]:z-[5]">
+    <div className="relative h-full [&_.ll_leaflet-control-container]:z-[5]">
       <MapContainer 
         center={validCenter}
         zoom={zoom} 
         style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
         whenReady={(map) => handleMapReady(map.target)}
         zoomControl={false}
+        className="ll_leaflet-container"
       >
         {mapReady && (
           <>
             <MapUpdater center={validCenter} zoom={zoom} selectedAsset={selectedAsset} />
             
-            <div className="leaflet-control-container">
+            <div className="ll_leaflet-control-container">
               <div className="leaflet-top leaflet-right">
                 <div className="leaflet-control-zoom leaflet-bar leaflet-control"></div>
               </div>
             </div>
 
-            <LayersControl position="topright">
+            <LayersControl position="topright" className="ll_leaflet-control-layers">
               <LayersControl.BaseLayer checked name="Street">
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -241,7 +242,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                     }
                   }}
                 >
-                  <Popup>
+                  <Popup className="ll_leaflet-popup">
                     <div className="p-2 min-w-[250px]">
                       <h3 className="font-semibold text-lg mb-2">{marker.name}</h3>
                       <div className="space-y-2 text-sm">

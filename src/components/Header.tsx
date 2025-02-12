@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Search, HelpCircle, X } from 'lucide-react';
+import { Search, HelpCircle, X, LogOut } from 'lucide-react';
 import { OrgSiteSelector } from './OrgSiteSelector';
+import { logout } from '../lib/auth';
 
 interface HeaderProps {
   searchTerm: string;
@@ -23,6 +24,11 @@ export function Header({
 }: HeaderProps) {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showOrgSelector, setShowOrgSelector] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    window.location.reload();
+  };
 
   return (
     <>
@@ -76,6 +82,16 @@ export function Header({
                 title="Help & Support"
               >
                 <HelpCircle className="w-5 h-5 text-[#004780]" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-2 hover:bg-gray-50 rounded-full transition-colors group relative"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+                <span className="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  Logout
+                </span>
               </button>
             </div>
           </div>

@@ -20,7 +20,7 @@ export function AssetList({
   onAssetViewChange
 }: AssetListProps) {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [sortOption, setSortOption] = useState<'lastSeen' | 'lowBattery' | 'name'>('name');
+  const [sortOption, setSortOption] = useState<'lastSeen' | 'lowBattery' | 'name'>('lastSeen');
 
   const sortedAssets = [...assets].sort((a, b) => {
     switch (sortOption) {
