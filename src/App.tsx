@@ -9,7 +9,6 @@ import { fetchTags, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api'
 import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
 import { Menu, X, QrCode } from 'lucide-react';
-import { GeotabLifecycle } from './lib/GeotabLifecycle';
 import { isAuthenticated } from './lib/auth';
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
@@ -167,12 +166,6 @@ function App() {
     setSearchTerm(macAddress);
     setShowQRScanner(false);
   };
-
-  // Attempt to initialize Geotab
-  if (typeof geotab !== 'undefined') {
-    console.log("Running in Geotab Platform: Registering Geotab Event Hooks...")
-    geotab.addin.AirfinderStagingAddIn = GeotabLifecycle;
-  }
 
   if (!authenticated) {
     // if (typeof geotab === 'undefined') {
