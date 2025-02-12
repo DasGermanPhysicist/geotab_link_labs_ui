@@ -2,22 +2,6 @@ import axios from "axios";
 import { GeotabSession } from "./geotab";
 // import jwt from "jsonwebtoken";
 
-
-const access_api = axios.create({
-    baseURL: import.meta.env.VITE_ACCESS_API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-const oauth2_api = axios.create({
-    baseURL: import.meta.env.VITE_OAUTH2_API_URL,
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-    },
-});
-
-
 // function decodeBase64Url(base64Url: string): string {
 //     // Replace non-url compatible chars with base64 standard chars
 //     base64Url = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -73,6 +57,13 @@ export function logout(): void {
   localStorage.removeItem('authToken');
 }
 
+const access_api = axios.create({
+  baseURL: import.meta.env.VITE_ACCESS_API_URL,
+  headers: {
+      'Content-Type': 'application/json',
+  },
+});
+
 export async function geotab_sso_login({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
     try {
         const response = await access_api.post('/access/geotab/sso',
@@ -96,6 +87,13 @@ export async function geotab_sso_login({ userName, database, sessionId }: Geotab
         return false;
     }
 }
+
+const oauth2_api = axios.create({
+  baseURL: import.meta.env.VITE_OAUTH2_API_URL,
+  headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+  },
+});
 
 export async function linklabs_oauth2_login(username: string, password: string): Promise<boolean> {
   const body = new URLSearchParams({
