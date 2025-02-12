@@ -84,8 +84,9 @@ export async function geotab_sso({ userName, database, sessionId }: GeotabSessio
         );
 
         if (response.status === 200 && response.data.token) {
-            const authHeader = `Bearer ${response.data.token}`;
-            localStorage.setItem('authToken', authHeader);
+            // const authHeader = `Bearer ${response.data.token}`;
+            // localStorage.setItem('authToken', authHeader);
+            localStorage.setItem('authToken', response.data.token)
             return true;
         }
 
