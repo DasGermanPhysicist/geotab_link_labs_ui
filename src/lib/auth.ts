@@ -45,6 +45,7 @@ function decodeBase64Url(base64Url: string): string {
 export function isAuthenticated(): boolean {
     const token = localStorage.getItem('authToken');
     if (!token) {
+      console.log("No token stored...") 
       return false;
     }
  
@@ -56,9 +57,11 @@ export function isAuthenticated(): boolean {
  
       // Check if the token is expired
       if (decodedToken?.payload.exp < currentTime) {
+        console.log("Token is expired...")
         return false;
       }
-  
+
+      console.log("Valid token...")
       return true;
     } catch (error) {
       console.error("Invalid token:", error);
