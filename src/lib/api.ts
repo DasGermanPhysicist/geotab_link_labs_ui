@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAuthHeader } from './auth';
 
 const NETWORK_ASSET_API_URL = import.meta.env.VITE_NETWORK_ASSET_API_URL;
 
@@ -80,7 +81,7 @@ const network_asset_api = axios.create({
 });
 
 network_asset_api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = getAuthHeader();
   if (token) {
     config.headers.Authorization = token;
   }

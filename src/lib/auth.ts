@@ -1,4 +1,5 @@
 import axios from "axios";
+import jwtDecode from "jsonwebtoken";
 
 export interface GeotabSession {
     // https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
@@ -18,9 +19,26 @@ const access_api = axios.create({
 });
 
 export function isAuthenticated(): boolean {
-  // TODO: Check JWT token is not expired.
-  return !!localStorage.getItem('authToken');
-}
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      return false;
+    }
+  
+    try {
+      const decodedToken: any = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+  
+      // Check if the token is expired
+      if (decodedToken.exp < currentTime) {
+        return false;
+      }
+  
+      return true;
+    } catch (error) {
+      console.error("Invalid token:", error);
+      return false;
+    }
+  }
 
 export function logout(): void {
   localStorage.removeItem('authToken');
@@ -49,3 +67,10 @@ export async function geotab_sso({ userName, database, sessionId }: GeotabSessio
     }
 }
 
+export function getAuthHeader(): string {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      return "";
+    }
+    return `Bearer ${token}`;
+}
