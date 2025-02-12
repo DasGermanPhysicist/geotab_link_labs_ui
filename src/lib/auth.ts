@@ -18,27 +18,52 @@ const access_api = axios.create({
     },
 });
 
+function decodeBase64Url(base64Url: string): string {
+    // Replace non-url compatible chars with base64 standard chars
+    base64Url = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    // Pad with trailing '='
+    const pad = base64Url.length % 4;
+    if (pad) {
+      base64Url += new Array(5 - pad).join('=');
+    }
+    return atob(base64Url);
+  }
+  
+  function parseJwt(token: string): { header: any; payload: any; signature: string } | null {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+    throw new Error('JWT must have 3 parts');
+    }
+
+    const header = JSON.parse(decodeBase64Url(parts[0]));
+    const payload = JSON.parse(decodeBase64Url(parts[1]));
+    const signature = parts[2];
+
+    return { header, payload, signature };
+  }
+
 export function isAuthenticated(): boolean {
     const token = localStorage.getItem('authToken');
     if (!token) {
       return false;
     }
  
-    return true;
-    // try {
+    // return true;
+    try {
     //   const decodedToken: any = jwt.decode(token);
-    //   const currentTime = Math.floor(Date.now() / 1000);
+        const decodedToken = parseJwt(token)
+        const currentTime = Math.floor(Date.now() / 1000);
+ 
+      // Check if the token is expired
+      if (decodedToken?.payload.exp < currentTime) {
+        return false;
+      }
   
-    //   // Check if the token is expired
-    //   if (decodedToken.exp < currentTime) {
-    //     return false;
-    //   }
-  
-    //   return true;
-    // } catch (error) {
-    //   console.error("Invalid token:", error);
-    //   return false;
-    // }
+      return true;
+    } catch (error) {
+      console.error("Invalid token:", error);
+      return false;
+    }
   }
 
 export function logout(): void {
