@@ -4,11 +4,6 @@ import { getAuthHeader } from './auth';
 const NETWORK_ASSET_API_URL = import.meta.env.VITE_NETWORK_ASSET_API_URL;
 
 
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
 export interface Organization {
   id: string;
   name: string;
@@ -87,28 +82,6 @@ network_asset_api.interceptors.request.use((config) => {
   }
   return config;
 });
-
-export async function login({ username, password }: LoginCredentials): Promise<boolean> {
-  try {
-    const authHeader = 'Basic ' + btoa(`${username}:${password}`);
-    
-    const response = await network_asset_api.get('/networkAsset/airfinder/organizations', {
-      headers: {
-        'Authorization': authHeader
-      }
-    });
-
-    if (response.status === 200) {
-      localStorage.setItem('authToken', authHeader);
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error('Login failed:', error);
-    return false;
-  }
-}
 
 export async function fetchOrganizations(): Promise<Organization[]> {
   try {

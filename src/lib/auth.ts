@@ -9,14 +9,20 @@ export interface GeotabSession {
     userName: string;
 }
 
-const ACCESS_API_URL = import.meta.env.VITE_ACCESS_API_URL;
-
 const access_api = axios.create({
-    baseURL: ACCESS_API_URL,
+    baseURL: import.meta.env.VITE_ACCESS_API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+const oauth2_api = axios.create({
+    baseURL: import.meta.env.VITE_OAUTH2_API_URL,
+    headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+    },
+});
+
 
 // function decodeBase64Url(base64Url: string): string {
 //     // Replace non-url compatible chars with base64 standard chars
@@ -73,7 +79,7 @@ export function logout(): void {
   localStorage.removeItem('authToken');
 }
 
-export async function geotab_sso({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
+export async function geotab_sso_login({ userName, database, sessionId }: GeotabSession): Promise<boolean> {
     try {
         const response = await access_api.post('/access/geotab/sso',
             {
@@ -95,6 +101,30 @@ export async function geotab_sso({ userName, database, sessionId }: GeotabSessio
         console.error('Login failed:', error);
         return false;
     }
+}
+
+export async function linklabs_oauth2_login(username: string, password: string): Promise<boolean> {
+  const body = new URLSearchParams({
+    grant_type: "password",
+    username: username,
+    password: password,
+    client_id: import.meta.env.VITE_OAUTH2_CLIENT_ID,
+    client_secret: import.meta.env.VITE_OAUTH2_CLIENT_SECRET,
+  });
+
+  try {
+    const response = await oauth2_api.post("oauth/token", body.toString());
+    const { access_token } = response.data;
+
+    if (access_token) {
+      localStorage.setItem("authToken", access_token);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("OAuth2 authentication failed:", error);
+    return false;
+  }
 }
 
 export function getAuthHeader(): string {
