@@ -149,23 +149,34 @@ interface GeotabLifecycleMethods {
     blur(api: GeotabAPI, state: PageState): void;
 }
 
-async function ensure_conductor_authorization(api: GeotabAPI) {
+async function ensure_linklabs_authorization(api: GeotabAPI, addInReady: CallbackFunction) {
+    const callAddInReady = () => {
+        if (!!addInReady) {
+            // console.log("Calling Add-In Ready...")
+            addInReady()
+        }
+    }
     if (isAuthenticated()) {
         // Nothing to do, user is authenticated.
+        callAddInReady();
         return;
     }
     api.getSession(
-        async (session: GeotabSession) => {
-            console.log("session:")
-            console.dir(session, { depth: null, colors: true });
+        (session: GeotabSession) => {
+            // console.log("session:")
+            // console.dir(session, { depth: null, colors: true });
 
             try {
-                if (await geotab_sso(session)) {
-                    console.log('Successfully authenticated with Geotab SSO.');
-                } else {
-                    console.warn('Failed to authenticate with Geotab SSO.');
-                    // Handle authentication failure, e.g., show login screen
-                }
+                geotab_sso(session).then(
+                    (successfully_authenticated) => {
+                        if (successfully_authenticated) {
+                            // console.log('Successfully authenticated with Geotab SSO.');
+                        } else {
+                            // console.warn('Failed to authenticate with Geotab SSO.');
+                        }
+                        callAddInReady();
+                    }
+                );
             } catch (error) {
                 console.error('Unexpected error authenticating to Link Labs:', error);
             }
@@ -178,29 +189,23 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
     // https://developers.geotab.com/myGeotab/addIns/developingAddIns#geotab-add-in-page-life-cycle
 
     return {
-        async initialize(api, _state, callback) {
-            console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
-            // console.dir(api, { depth: null, colors: true });
-            // console.dir(state, { depth: null, colors: true });
-
-            ensure_conductor_authorization(api);
+        initialize(api, _state, addInReady) {
+            // console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
+            ensure_linklabs_authorization(api, addInReady);
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
             // Keep in mind the asynchronous nature of JavaScript. The optional focus and blur methods will
             // be called due to the callback method being called in the initialize method.
-            callback();
+            // addInReady();
         },
 
-        focus(api, _state) {
-            console.log("Geotab Focus Lifecycle: Airfinder Add-In");
-            // console.dir(api, { depth: null, colors: true });
-            // console.dir(state, { depth: null, colors: true });
-
-            ensure_conductor_authorization(api);
+        focus(_api, _state) {
+            // console.log("Geotab Focus Lifecycle: Airfinder Add-In");
+            // ensure_conductor_authorization(api);
         },
         
         blur(_api, _state) {
-            console.log("Geotab Blur Lifecycle: Airfinder Add-In");
+            // console.log("Geotab Blur Lifecycle: Airfinder Add-In");
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
         }

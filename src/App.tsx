@@ -4,14 +4,13 @@ import { Map } from './components/Map';
 import { AssetList } from './components/AssetList';
 import { Dashboard } from './components/Dashboard';
 import { LoginScreen } from './components/LoginScreen';
+import { LoadingScreen } from './components/LoadingScreen';
 import { QRScanner } from './components/QRScanner';
 import { fetchTags, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
 import { Menu, X, QrCode } from 'lucide-react';
-import { GeotabLifecycle } from './lib/GeotabLifecycle';
 import { isAuthenticated } from './lib/auth';
-import { LoadingScreen } from './components/LoadingScreen'; // Import the LoadingScreen component
 
 const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
 
@@ -169,18 +168,12 @@ function App() {
     setShowQRScanner(false);
   };
 
-  // Attempt to initialize Geotab
-  if (typeof geotab !== 'undefined') {
-    console.log("Running in Geotab Platform: Registering Geotab Event Hooks...")
-    geotab.addin.AirfinderAddIn = GeotabLifecycle;
-  }
-
   if (!authenticated) {
-    // if (typeof geotab === 'undefined') {
+    if (typeof geotab === 'undefined') {
       return <LoginScreen onLogin={handleLogin} />;
-    // } else {
-    //   return <LoadingScreen onLogin={handleLogin} />;
-    // }
+    } else {
+      return <LoadingScreen onLogin={handleLogin} />;
+    }
   }
 
   return (
