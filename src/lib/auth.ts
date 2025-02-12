@@ -45,7 +45,7 @@ const access_api = axios.create({
 export function isAuthenticated(): boolean {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      console.log("No token stored...") 
+    //   console.log("No token stored...") 
       return false;
     }
  

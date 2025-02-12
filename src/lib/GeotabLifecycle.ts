@@ -152,7 +152,7 @@ interface GeotabLifecycleMethods {
 async function ensure_linklabs_authorization(api: GeotabAPI, addInReady: CallbackFunction) {
     const callAddInReady = () => {
         if (!!addInReady) {
-            console.log("Calling Add-In Ready...")
+            // console.log("Calling Add-In Ready...")
             addInReady()
         }
     }
@@ -163,16 +163,16 @@ async function ensure_linklabs_authorization(api: GeotabAPI, addInReady: Callbac
     }
     api.getSession(
         (session: GeotabSession) => {
-            console.log("session:")
-            console.dir(session, { depth: null, colors: true });
+            // console.log("session:")
+            // console.dir(session, { depth: null, colors: true });
 
             try {
                 geotab_sso(session).then(
                     (successfully_authenticated) => {
                         if (successfully_authenticated) {
-                            console.log('Successfully authenticated with Geotab SSO.');
+                            // console.log('Successfully authenticated with Geotab SSO.');
                         } else {
-                            console.warn('Failed to authenticate with Geotab SSO.');
+                            // console.warn('Failed to authenticate with Geotab SSO.');
                         }
                         callAddInReady();
                     }
@@ -190,7 +190,7 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
 
     return {
         initialize(api, _state, addInReady) {
-            console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
+            // console.log("Geotab Initialize Lifecycle: Airfinder Add-In");
             ensure_linklabs_authorization(api, addInReady);
 
             // NOTE: It's important to call the callback passed into initialize after all work is complete.
@@ -200,12 +200,12 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
         },
 
         focus(_api, _state) {
-            console.log("Geotab Focus Lifecycle: Airfinder Add-In");
+            // console.log("Geotab Focus Lifecycle: Airfinder Add-In");
             // ensure_conductor_authorization(api);
         },
         
         blur(_api, _state) {
-            console.log("Geotab Blur Lifecycle: Airfinder Add-In");
+            // console.log("Geotab Blur Lifecycle: Airfinder Add-In");
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
         }

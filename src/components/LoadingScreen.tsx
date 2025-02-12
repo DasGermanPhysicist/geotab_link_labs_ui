@@ -7,12 +7,12 @@ interface LoadingScreenProps {
 export function LoadingScreen({ onLogin }: LoadingScreenProps) {
 
     const waitForAuthentication = async () => {
-        console.log("Waiting for Geotab Initialization...");
+        // console.log("Waiting for Geotab Initialization...");
         while (!isAuthenticated()) {
-            console.log("waiting 1 second...")
+            // console.log("waiting 1 second...")
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
-        console.log("Geotab SSO completed... Authenticated!");
+        // console.log("Geotab SSO completed... Authenticated!");
         onLogin();
     };
 
