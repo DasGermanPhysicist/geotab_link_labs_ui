@@ -1,13 +1,7 @@
 import axios from "axios";
+import { GeotabSession } from "./geotab";
 // import jwt from "jsonwebtoken";
 
-export interface GeotabSession {
-    // https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
-    database: string;
-    date: string;
-    sessionId: string;
-    userName: string;
-}
 
 const access_api = axios.create({
     baseURL: import.meta.env.VITE_ACCESS_API_URL,
