@@ -1,3 +1,7 @@
+export function runningInGeotab(): boolean {
+    return typeof geotab !== 'undefined';
+}
+
 export interface GeotabSession {
     // https://developers.geotab.com/myGeotab/apiReference/objects/Credentials
     database: string;
