@@ -58,3 +58,7 @@
 .ll_custom-marker-cluster {
   z-index: 4 !important;
 }
+
+.ll-grid {
+  display: grid;
+}

@@ -64,7 +64,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
             <h3 className="text-lg font-semibold text-gray-900">{parentSuperTag.name}</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="ll-grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Battery className={`w-5 h-5 ${getBatteryColor(parentSuperTag.battery)}`} />
@@ -122,7 +122,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
           <p className="text-gray-500 text-center">No BLE assets leashed to {selectedAsset.name}</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="ll-grid gap-4">
           {bleAssetsToShow.map((asset, index) => {
             const isConnected = isWithin24Hours(asset.lastEventTime);
             const batteryInfo = getBatteryInfo(asset);
@@ -143,7 +143,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="ll-grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <Battery className={`w-4 h-4 ${getBatteryColor(batteryInfo)}`} />

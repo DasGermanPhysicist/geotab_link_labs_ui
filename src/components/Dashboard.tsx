@@ -44,8 +44,8 @@ export function Dashboard({ selectedAsset, markers, mapConfig, onAssetSelect }: 
       </div>
 
       {!selectedAsset && (
-        <div className="grid grid-cols-1 gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="ll-grid grid-cols-1 gap-6">
+          <div className="ll-grid grid-cols-1 md:grid-cols-2 gap-6">
             <BatteryDistribution assets={markers} />
             <DoorSensorStatus assets={markers} />
           </div>
