@@ -95,7 +95,7 @@ export function AlertTotals() {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="ll-grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Temperature Alerts */}
         <div 
           onClick={() => setModalContent({ type: 'temperature', isOpen: true })}
@@ -159,7 +159,7 @@ export function AlertTotals() {
           {temperatureAlerts.map(alert => (
             <div key={alert.id} className="bg-gray-50 p-4 rounded-lg">
               <div className="font-semibold text-red-500 mb-2">High Temperature Alert</div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="ll-grid grid-cols-2 gap-2 text-sm">
                 <div>Temperature: {alert.temperature}°F</div>
                 <div>Humidity: {alert.humidity}%</div>
                 <div className="col-span-2">Time: {formatDate(alert.timestamp)}</div>
@@ -179,7 +179,7 @@ export function AlertTotals() {
           {batteryAlerts.map(alert => (
             <div key={alert.id} className="bg-gray-50 p-4 rounded-lg">
               <div className="font-semibold text-orange-500 mb-2">Low Battery Alert</div>
-              <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="ll-grid grid-cols-1 gap-2 text-sm">
                 <div>Battery Level: {alert.batteryLevel}%</div>
                 <div>Time: {formatDate(alert.timestamp)}</div>
               </div>
@@ -198,7 +198,7 @@ export function AlertTotals() {
           {shockAlerts.map(alert => (
             <div key={alert.id} className="bg-gray-50 p-4 rounded-lg">
               <div className="font-semibold text-yellow-500 mb-2">Shock Impact Alert</div>
-              <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="ll-grid grid-cols-1 gap-2 text-sm">
                 <div>Impact Level: {alert.shockLevel}g</div>
                 <div>Time: {formatDate(alert.timestamp)}</div>
               </div>
@@ -217,7 +217,7 @@ export function AlertTotals() {
           {geofenceAlerts.map(alert => (
             <div key={alert.id} className="bg-gray-50 p-4 rounded-lg">
               <div className="font-semibold text-blue-500 mb-2">Geofence Alert</div>
-              <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="ll-grid grid-cols-1 gap-2 text-sm">
                 <div>Type: Geofence {alert.type}</div>
                 <div>Zone: {alert.geofenceName}</div>
                 <div>Time: {formatDate(alert.timestamp)}</div>

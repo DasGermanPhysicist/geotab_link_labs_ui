@@ -184,7 +184,7 @@ export function AssetList({
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="ll-grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-1.5">
                   <Battery 
                     className={`w-4 h-4 ${
