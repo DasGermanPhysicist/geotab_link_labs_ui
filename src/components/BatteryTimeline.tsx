@@ -59,7 +59,7 @@ export function BatteryTimeline() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="ll-grid grid-cols-2 gap-4 mb-4">
         <div className="bg-white p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <Battery className="w-6 h-6 text-[#87B812]" />
