@@ -101,13 +101,12 @@ export async function geotab_sso_login({ userName, database, sessionId }: Geotab
             }
         );
 
-        const {status, data} = response.data;
-        const { token } = data;
+        const token = response.data.token;
         console.log("token:" + token);
         const jwt_token = jwtDecode(token);
         console.log("jwt token:"+ jwt_token);
 
-        if (status === 200 && data.token) {
+        if (response.status === 200 && token) {
             setAuthToken(token, jwt_token.exp ? jwt_token.exp : Number.MAX_VALUE);
             // localStorage.setItem('authToken', response.data.token)
             return true;
