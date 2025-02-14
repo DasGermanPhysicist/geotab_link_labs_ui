@@ -99,8 +99,7 @@ export async function linklabs_oauth2_login(username: string, password: string):
     // Get the current Unix timestamp in seconds
     const currentTimestamp = Math.floor(Date.now() / 1000);
     // Calculate the future timestamp by adding the given seconds
-    const futureTimestamp = currentTimestamp + secondsUntil;
-    return futureTimestamp;
+    return currentTimestamp + secondsUntil;
   }
 
   try {
