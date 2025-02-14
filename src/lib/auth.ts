@@ -6,7 +6,7 @@ export function isAuthenticated(): boolean {
   // Get auth token
   const token = localStorage.getItem('authToken');
   if (!token) {
-    console.log("Not Authenticated: No token stored...")
+    // console.log("Not Authenticated: No token stored...")
     return false;
   }
 
@@ -21,7 +21,7 @@ export function isAuthenticated(): boolean {
   const expiresAt = exp ? parseInt(exp) : Number.MAX_VALUE;
   const currentTime = Math.floor(Date.now() / 1000);
   if (expiresAt < currentTime) {
-    console.log("Token is expired...")
+    // console.log("Token is expired...")
     return false;
   }
   return true;
