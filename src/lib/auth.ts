@@ -1,6 +1,6 @@
 import axios from "axios";
 import { GeotabSession } from "./geotab";
-// import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 // function decodeBase64Url(base64Url: string): string {
 //     // Replace non-url compatible chars with base64 standard chars
@@ -29,10 +29,21 @@ import { GeotabSession } from "./geotab";
 export function isAuthenticated(): boolean {
     const token = localStorage.getItem('authToken');
     if (!token) {
-    //   console.log("No token stored...") 
+      console.log("Not Authenticated: No token stored...") 
       return false;
     }
+
+    const exp = localStorage.getItem("authExp")
+    const expiresAt = exp ? parseInt(exp) : 0;
+    const currentTime = Math.floor(Date.now() / 1000);
  
+    // Check if the token is expired
+    if (expiresAt < currentTime) {
+      console.log("Token is expired...")
+      return false;
+    }
+
+
     return true;
     // try {
     // //   const decodedToken: any = jwt.decode(token);
@@ -57,6 +68,19 @@ export function logout(): void {
   localStorage.removeItem('authToken');
 }
 
+function setAuthToken(token: string, exp: number) {
+  localStorage.setItem("authToken", token);
+  localStorage.setItem("authExp", exp.toString());
+}
+
+export function getAuthHeader(): string {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    return "";
+  }
+  return `Bearer ${token}`;
+}
+
 const access_api = axios.create({
   baseURL: import.meta.env.VITE_ACCESS_API_URL,
   headers: {
@@ -74,10 +98,15 @@ export async function geotab_sso_login({ userName, database, sessionId }: Geotab
             }
         );
 
-        if (response.status === 200 && response.data.token) {
-            // const authHeader = `Bearer ${response.data.token}`;
-            // localStorage.setItem('authToken', authHeader);
-            localStorage.setItem('authToken', response.data.token)
+        const {status, data} = response.data;
+        const { token } = data;
+        console.log("token:" + token);
+        const jwt_token = jwt.parseJwt(token);
+        console.log("jwt token:"+ jwt_token);
+
+        if (status === 200 && data.token) {
+            setAuthToken(token, jwt_token.exp)
+            // localStorage.setItem('authToken', response.data.token)
             return true;
         }
 
@@ -104,12 +133,20 @@ export async function linklabs_oauth2_login(username: string, password: string):
     client_secret: import.meta.env.VITE_OAUTH2_CLIENT_SECRET,
   });
 
+  function calculateFutureTimestamp(secondsUntil: number) {
+    // Get the current Unix timestamp in seconds
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    // Calculate the future timestamp by adding the given seconds
+    const futureTimestamp = currentTimestamp + secondsUntil;
+    return futureTimestamp;
+}
+
   try {
     const response = await oauth2_api.post("oauth/token", body.toString());
-    const { access_token } = response.data;
+    const { access_token, expires_in } = response.data;
 
     if (access_token) {
-      localStorage.setItem("authToken", access_token);
+      setAuthToken(access_token, calculateFutureTimestamp(expires_in));
       return true;
     }
     return false;
@@ -117,12 +154,4 @@ export async function linklabs_oauth2_login(username: string, password: string):
     console.error("OAuth2 authentication failed:", error);
     return false;
   }
-}
-
-export function getAuthHeader(): string {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      return "";
-    }
-    return `Bearer ${token}`;
 }
