@@ -1,6 +1,6 @@
 import axios from "axios";
 import { GeotabSession } from "./geotab";
-import jwt from "jsonwebtoken";
+import { jwtDecode } from "jwt-decode";
 
 // function decodeBase64Url(base64Url: string): string {
 //     // Replace non-url compatible chars with base64 standard chars
@@ -101,11 +101,11 @@ export async function geotab_sso_login({ userName, database, sessionId }: Geotab
         const {status, data} = response.data;
         const { token } = data;
         console.log("token:" + token);
-        const jwt_token = jwt.parseJwt(token);
+        const jwt_token = jwtDecode(token);
         console.log("jwt token:"+ jwt_token);
 
         if (status === 200 && data.token) {
-            setAuthToken(token, jwt_token.exp)
+            setAuthToken(token, jwt_token.exp ? jwt_token.exp : 0);
             // localStorage.setItem('authToken', response.data.token)
             return true;
         }
