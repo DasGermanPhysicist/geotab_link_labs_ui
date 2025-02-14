@@ -33,8 +33,12 @@ export function isAuthenticated(): boolean {
       return false;
     }
 
-    const exp = localStorage.getItem("authExp")
-    const expiresAt = exp ? parseInt(exp) : 0;
+    const exp = localStorage.getItem("authExp");
+    if (!exp) {
+      // No expiration to validate.
+      return true;
+    }
+    const expiresAt = exp ? parseInt(exp) : Number.MAX_VALUE;
     const currentTime = Math.floor(Date.now() / 1000);
  
     // Check if the token is expired
@@ -42,7 +46,6 @@ export function isAuthenticated(): boolean {
       console.log("Token is expired...")
       return false;
     }
-
 
     return true;
     // try {
