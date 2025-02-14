@@ -16,10 +16,10 @@ export function isAuthenticated(): boolean {
     // No expiration to validate.
     return true;
   }
+  
+  // Check if the token is expired
   const expiresAt = exp ? parseInt(exp) : Number.MAX_VALUE;
   const currentTime = Math.floor(Date.now() / 1000);
-
-  // Check if the token is expired
   if (expiresAt < currentTime) {
     console.log("Token is expired...")
     return false;
