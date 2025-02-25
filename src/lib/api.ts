@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAuthHeader } from './auth';
+import { securityHeaders } from './security';
 
 const NETWORK_ASSET_API_URL = import.meta.env.VITE_NETWORK_ASSET_API_URL;
 
@@ -72,6 +73,7 @@ const network_asset_api = axios.create({
   baseURL: NETWORK_ASSET_API_URL,
   headers: {
     'Content-Type': 'application/json',
+    ...securityHeaders()
   },
 });
 
