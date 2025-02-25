@@ -15,7 +15,7 @@ export function isAuthenticated(): boolean {
   const exp = localStorage.getItem("authExp");
   if (!exp) {
     // No expiration to validate but a token is present.
-    return true;
+    return false;
   }
   
   // Check if the token is expired
