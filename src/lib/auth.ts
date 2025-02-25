@@ -1,6 +1,7 @@
 import axios from "axios";
 import { GeotabSession } from "./geotab";
 import { jwtDecode } from "jwt-decode";
+import { securityHeaders } from "./security";
 
 export function isAuthenticated(): boolean {
   // Get auth token
@@ -13,8 +14,8 @@ export function isAuthenticated(): boolean {
   // Get auth token expiration
   const exp = localStorage.getItem("authExp");
   if (!exp) {
-    // No expiration to validate.
-    return true;
+    // No expiration to validate but a token is present.
+    return false;
   }
   
   // Check if the token is expired
@@ -49,6 +50,7 @@ const access_api = axios.create({
   baseURL: import.meta.env.VITE_ACCESS_API_URL,
   headers: {
     'Content-Type': 'application/json',
+    ...securityHeaders()
   },
 });
 
@@ -83,6 +85,7 @@ const oauth2_api = axios.create({
   baseURL: import.meta.env.VITE_OAUTH2_API_URL,
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
+    ...securityHeaders()
   },
 });
 
@@ -110,6 +113,7 @@ export async function linklabs_oauth2_login(username: string, password: string):
       setAuthToken(access_token, calculateFutureTimestamp(expires_in));
       return true;
     }
+    console.error("No access token received")
     return false;
   } catch (error) {
     console.error("OAuth2 authentication failed:", error);
