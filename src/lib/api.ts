@@ -16,7 +16,7 @@ export interface Site {
 }
 
 export interface Tag {
-  name: string;
+  nodeName: string;
   macAddress: string;
   fahrenheit: number | null;
   lastEventTime: string;
@@ -41,7 +41,7 @@ export interface BatteryInfo {
 }
 
 export interface BLEAsset {
-  name: string;
+  nodeName: string;
   type: string;
   connected: boolean;
   connectionDate: string;

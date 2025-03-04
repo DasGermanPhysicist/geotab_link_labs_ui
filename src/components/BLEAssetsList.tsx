@@ -5,7 +5,7 @@ import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import type { ProcessedMarker } from '../types/assets';
 
 interface BLEAsset {
-  name: string;
+  nodeName: string;
   connected: boolean;
   lastEventTime: string;
   batteryVoltage: string;
@@ -136,7 +136,7 @@ export function BLEAssetsList({ assets, selectedAsset }: BLEAssetsListProps) {
                     ) : (
                       <WifiOff className="w-5 h-5 text-red-500" />
                     )}
-                    <span className="font-semibold text-lg">{asset.name}</span>
+                    <span className="font-semibold text-lg">{asset.nodeName}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-sm text-gray-500">Parent: {selectedAsset.name}</span>

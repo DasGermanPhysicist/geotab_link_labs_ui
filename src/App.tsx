@@ -92,7 +92,7 @@ function App() {
   const findSuperTagName = (supertagId: string | null) => {
     if (!supertagId) return null;
     const superTag = tags.find(tag => tag.nodeAddress === supertagId);
-    return superTag?.name || null;
+    return superTag?.nodeName || null;
   };
 
   const findLeashedTags = (nodeAddress: string) => {
@@ -109,7 +109,7 @@ function App() {
         position: tag.latitude != null && tag.longitude != null
           ? [Number(tag.latitude), Number(tag.longitude)] as LatLngTuple
           : DEFAULT_POSITION,
-        name: tag.name || 'Unnamed Asset',
+        name: tag.nodeName || 'Unnamed Asset',
         type: getTagType(tag.registrationToken),
         temperature,
         battery: getBatteryInfo(tag),
@@ -151,7 +151,7 @@ function App() {
           (marker.doorSensorStatus || '').toLowerCase().includes(searchLower) ||
           (marker.leashedToSuperTag || '').toLowerCase().includes(searchLower) ||
           (marker.geotabSerialNumber || '').toLowerCase().includes(searchLower) ||
-          marker.bleAssets.some(asset => (asset.name || '').toLowerCase().includes(searchLower))
+          marker.bleAssets.some(asset => (asset.nodeName || '').toLowerCase().includes(searchLower))
         );
       });
     }
