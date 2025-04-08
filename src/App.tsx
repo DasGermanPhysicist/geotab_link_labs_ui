@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Map } from './components/Map';
 import { AssetList } from './components/AssetList';
+import { AssetDetailOverlay } from './components/AssetDetailOverlay';
 import { Dashboard } from './components/Dashboard';
 import { LoginScreen } from './components/LoginScreen';
 import { LoadingScreen } from './components/LoadingScreen';
@@ -9,7 +10,7 @@ import { QRScanner } from './components/QRScanner';
 import { fetchTags, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
 import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
-import { Menu, X, QrCode } from 'lucide-react';
+import { Menu, X, QrCode, ArrowLeft } from 'lucide-react';
 import { isAuthenticated } from './lib/auth';
 import { runningInGeotab } from './lib/geotab';
 
@@ -32,9 +33,10 @@ function App() {
   const [assetViewType, setAssetViewType] = useState<AssetViewType>(() => 
     (localStorage.getItem('assetViewType') as AssetViewType) || 'all'
   );
-  const [showSidebar, setShowSidebar] = useState(true);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
+  const [isDetailExpanded, setIsDetailExpanded] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   useEffect(() => {
     localStorage.setItem('showMapView', showMapView.toString());
@@ -72,22 +74,10 @@ function App() {
   useEffect(() => {
     if (authenticated && selectedSiteId) {
       loadTags();
-
-      // Set up automatic refresh
-      const intervalId = setInterval(() => {
-        loadTags(true); // Pass true to indicate background loading
-      }, REFRESH_INTERVAL);
-
-      // Clean up interval on unmount or when dependencies change
+      const intervalId = setInterval(() => loadTags(true), REFRESH_INTERVAL);
       return () => clearInterval(intervalId);
     }
   }, [authenticated, selectedSiteId, loadTags]);
-
-  useEffect(() => {
-    if (window.innerWidth <= 768 && selectedAsset) {
-      setShowSidebar(false);
-    }
-  }, [selectedAsset]);
 
   const findSuperTagName = (supertagId: string | null) => {
     if (!supertagId) return null;
@@ -178,6 +168,7 @@ function App() {
 
   const handleAssetSelect = (asset: ProcessedMarker | null) => {
     setSelectedAsset(asset);
+    setIsDetailExpanded(true);
     if (window.innerWidth <= 768) {
       setShowSidebar(false);
     }
@@ -198,65 +189,59 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Map container - positioned absolutely to be behind everything */}
-      {!loading && !error && selectedSiteId && showMapView && (
-        <div className="fixed inset-0 z-0">
-          <Map 
-            center={mapConfig.center}
-            zoom={mapConfig.zoom}
-            markers={selectedAsset ? [selectedAsset] : filteredMarkers}
-          />
+      <Header 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        showMapView={showMapView}
+        onViewChange={setShowMapView}
+        selectedSiteId={selectedSiteId}
+        onSiteSelect={setSelectedSiteId}
+        showSearchInHeader={false}
+      />
+
+      <main className="h-[calc(100vh-73px)] relative">
+        {/* Desktop Layout */}
+        <div className="hidden md:flex h-full">
+          {/* Sidebar */}
+          <div className="w-80 bg-white border-r border-gray-200">
+            <div className="p-4 border-b border-gray-200">
+              <div className="relative">
+                <input
+                  type="search"
+                  placeholder="Search assets..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#87B812]"
+                />
+              </div>
+            </div>
+            <div className="overflow-y-auto h-[calc(100%-73px)]">
+              <AssetList 
+                assets={filteredMarkers}
+                selectedAsset={selectedAsset}
+                onAssetSelect={handleAssetSelect}
+                assetViewType={assetViewType}
+                onAssetViewChange={setAssetViewType}
+              />
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <Dashboard 
+              selectedAsset={selectedAsset}
+              markers={filteredMarkers}
+              mapConfig={mapConfig}
+              onAssetSelect={handleAssetSelect}
+            />
+          </div>
         </div>
-      )}
 
-      {/* Main content wrapper - everything above the map */}
-      <div className="relative z-10 flex flex-col h-screen">
-        <Header 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          showMapView={showMapView}
-          onViewChange={setShowMapView}
-          selectedSiteId={selectedSiteId}
-          onSiteSelect={setSelectedSiteId}
-          showSearchInHeader={false}
-        />
-
-        {loading && !selectedSiteId && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Select an organization and site to view assets</div>
-          </div>
-        )}
-
-        {loading && selectedSiteId && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-xl text-gray-600">Loading assets...</div>
-          </div>
-        )}
-
-        {error && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-xl text-red-600">{error}</div>
-          </div>
-        )}
-
-        {!loading && !error && selectedSiteId && (
-          <div className="flex-1 flex relative">
-            {/* Mobile sidebar toggle button - moved 10% higher */}
-            <button
-              onClick={() => setShowSidebar(!showSidebar)}
-              className="md:hidden fixed bottom-[40%] right-4 z-50 bg-[#87B812] text-white p-3 rounded-full shadow-lg"
-            >
-              {showSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-
-            {/* Sidebar */}
-            <div className={`
-              ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-              transition-transform duration-300 ease-in-out
-              w-full md:w-80 bg-white/95 backdrop-blur-sm border-r border-gray-200 
-              fixed md:relative z-20 h-full
-              shadow-lg md:shadow-none
-            `}>
+        {/* Mobile Layout */}
+        <div className="md:hidden h-full">
+          {/* List View (shown when no asset is selected) */}
+          {!selectedAsset && (
+            <div className="h-full flex flex-col">
               <div className="p-4 border-b border-gray-200 bg-white">
                 <div className="relative">
                   <input
@@ -268,38 +253,73 @@ function App() {
                   />
                   <button
                     onClick={() => setShowQRScanner(true)}
-                    className="md:hidden absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full transition-colors"
                     title="Scan QR Code"
                   >
                     <QrCode className="w-5 h-5 text-gray-400 hover:text-[#87B812]" />
                   </button>
                 </div>
               </div>
-              <div className="overflow-y-auto h-[calc(100%-60px)]">
-                <AssetList 
-                  assets={filteredMarkers}
-                  selectedAsset={selectedAsset}
-                  onAssetSelect={handleAssetSelect}
-                  assetViewType={assetViewType}
-                  onAssetViewChange={setAssetViewType}
-                />
+
+              <div className="flex-1 overflow-y-auto">
+                {loading && !selectedSiteId && (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-xl text-gray-600">Select an organization and site to view assets</div>
+                  </div>
+                )}
+
+                {loading && selectedSiteId && (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-xl text-gray-600">Loading assets...</div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-xl text-red-600">{error}</div>
+                  </div>
+                )}
+
+                {!loading && !error && selectedSiteId && (
+                  <AssetList 
+                    assets={filteredMarkers}
+                    selectedAsset={selectedAsset}
+                    onAssetSelect={handleAssetSelect}
+                    assetViewType={assetViewType}
+                    onAssetViewChange={setAssetViewType}
+                  />
+                )}
               </div>
             </div>
+          )}
 
-            {/* Main content - only show if not in map view */}
-            {!showMapView && (
-              <div className="flex-1 overflow-y-auto p-6 w-full bg-gray-50">
-                <Dashboard 
-                  selectedAsset={selectedAsset}
-                  markers={filteredMarkers}
-                  mapConfig={mapConfig}
-                  onAssetSelect={handleAssetSelect}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          {/* Map View (shown when an asset is selected) */}
+          {selectedAsset && (
+            <div className="h-full relative">
+              {/* Back button */}
+              <button
+                onClick={() => setSelectedAsset(null)}
+                className="absolute top-4 left-4 z-20 bg-white p-2 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-600" />
+              </button>
+
+              <Map 
+                center={mapConfig.center}
+                zoom={mapConfig.zoom}
+                markers={[selectedAsset]}
+              />
+
+              <AssetDetailOverlay
+                asset={selectedAsset}
+                isExpanded={isDetailExpanded}
+                onToggleExpand={() => setIsDetailExpanded(!isDetailExpanded)}
+                allAssets={filteredMarkers}
+              />
+            </div>
+          )}
+        </div>
+      </main>
 
       {/* QR Scanner Modal */}
       {showQRScanner && (
