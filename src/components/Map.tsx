@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Battery, Tag, X, ChevronRight } from 'lucide-react';
+import { Battery, Tag, X, ChevronRight, Map as MapIcon } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { TagTypes } from '../lib/api';
@@ -139,6 +139,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   const [mapReady, setMapReady] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const markerRefs = useRef<{ [key: string]: L.Marker }>({});
+  const [mapType, setMapType] = useState<'terrain' | 'satellite'>('terrain');
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
   const defaultCenter: LatLngTuple = [0, 0];
@@ -199,30 +200,63 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
               </div>
             </div>
 
-            <LayersControl position="topright" className="ll_leaflet-control-layers">
-              <LayersControl.BaseLayer checked name="Street">
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-              </LayersControl.BaseLayer>
+            {/* Desktop layer control */}
+            <div className="hidden md:block">
+              <LayersControl position="topright" className="ll_leaflet-control-layers">
+                <LayersControl.BaseLayer checked name="Street">
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                </LayersControl.BaseLayer>
 
-              <LayersControl.BaseLayer name="Terrain">
+                <LayersControl.BaseLayer name="Terrain">
+                  <TileLayer
+                    attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                    url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                    maxZoom={17}
+                  />
+                </LayersControl.BaseLayer>
+
+                <LayersControl.BaseLayer name="Satellite">
+                  <TileLayer
+                    attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    maxZoom={19}
+                  />
+                </LayersControl.BaseLayer>
+              </LayersControl>
+            </div>
+
+            {/* Mobile map type toggle */}
+            <div className="md:hidden absolute bottom-24 right-4 z-[400]">
+              <button
+                onClick={() => setMapType(mapType === 'terrain' ? 'satellite' : 'terrain')}
+                className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2"
+              >
+                <MapIcon className="w-5 h-5 text-gray-600" />
+                <span className="text-sm font-medium">
+                  {mapType === 'terrain' ? 'Satellite' : 'Terrain'}
+                </span>
+              </button>
+            </div>
+
+            {/* Mobile-specific layers */}
+            <div className="md:hidden">
+              {mapType === 'terrain' ? (
                 <TileLayer
-                  attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                  attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
                   url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
                   maxZoom={17}
                 />
-              </LayersControl.BaseLayer>
-
-              <LayersControl.BaseLayer name="Satellite">
+              ) : (
                 <TileLayer
                   attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                   maxZoom={19}
                 />
-              </LayersControl.BaseLayer>
-            </LayersControl>
+              )}
+            </div>
 
             <MarkerClusterGroup
               chunkedLoading
@@ -253,7 +287,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                         <div className="group/time relative">
                           <span className="text-gray-600">Last Update:</span>{' '}
                           <span>{formatRelativeTime(marker.lastUpdate)}</span>
-                          <span className="absolute left-0 -top-6 bg-gray-800 text-white text-xs px-2 py-1 rounded 
+                          <span className="hidden md:block absolute left-0 -top-6 bg-gray-800 text-white text-xs px-2 py-1 rounded 
                                        opacity-0 group-hover/time:opacity-100 transition-opacity whitespace-nowrap">
                             {formatLocalDateTime(marker.lastUpdate)}
                           </span>

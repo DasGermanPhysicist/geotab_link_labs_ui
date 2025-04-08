@@ -15,8 +15,11 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
   const [hasZoom, setHasZoom] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const streamRef = useRef<MediaStream | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     let animationFrameId: number;
 
     const startCamera = async () => {
@@ -41,6 +44,13 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // Check if component is still mounted before proceeding
+        if (!mountedRef.current) {
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
         streamRef.current = stream;
 
         // Check if zoom is supported
@@ -48,19 +58,31 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
         const capabilities = track.getCapabilities();
         setHasZoom(!!capabilities.zoom);
 
-        if (videoRef.current) {
+        if (videoRef.current && mountedRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-
-          // Set initial zoom if available
-          if (capabilities.zoom) {
-            const settings = track.getSettings();
-            setZoomLevel(settings.zoom || 1);
+          
+          try {
+            await videoRef.current.play();
+            
+            // Only proceed with scanning if still mounted
+            if (mountedRef.current) {
+              // Set initial zoom if available
+              if (capabilities.zoom) {
+                const settings = track.getSettings();
+                setZoomLevel(settings.zoom || 1);
+              }
+              requestAnimationFrame(scan);
+            }
+          } catch (playError) {
+            if (mountedRef.current) {
+              console.error('Error playing video:', playError);
+              setError('Failed to start video stream. Please try again.');
+            }
           }
-
-          requestAnimationFrame(scan);
         }
       } catch (err) {
+        if (!mountedRef.current) return;
+
         let errorMessage = 'Unable to access camera. ';
         
         if (err instanceof Error) {
@@ -83,7 +105,7 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
     };
 
     const scan = () => {
-      if (!scanning) return;
+      if (!scanning || !mountedRef.current) return;
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -136,10 +158,29 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
     startCamera();
 
     return () => {
+      mountedRef.current = false;
       setScanning(false);
-      cancelAnimationFrame(animationFrameId);
+      
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
+      // Clean up video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      
+      // Clean up media stream
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        const tracks = streamRef.current.getTracks();
+        tracks.forEach(track => {
+          try {
+            track.stop();
+          } catch (err) {
+            console.error('Error stopping track:', err);
+          }
+        });
+        streamRef.current = null;
       }
     };
   }, [onScan, scanning]);
