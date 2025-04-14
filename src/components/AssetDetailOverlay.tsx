@@ -4,6 +4,7 @@ import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import { TagTypes } from '../lib/api';
 import { BLEDevicesList } from './BLEDevicesList';
+import { getTemperatureDisplay } from '../lib/temperature';
 
 interface AssetDetailOverlayProps {
   asset: ProcessedMarker;
@@ -87,7 +88,7 @@ export function AssetDetailOverlay({
                   <span className="font-medium">Temperature</span>
                 </div>
                 <div className="text-2xl font-bold">
-                  {asset.temperature ? `${asset.temperature.toFixed(1)}°F` : 'N/A'}
+                  {getTemperatureDisplay(asset.temperature)}
                 </div>
               </div>
             )}

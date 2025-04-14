@@ -9,6 +9,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { TagTypes } from '../lib/api';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
+import { getTemperatureDisplay } from '../lib/temperature';
 import type { ProcessedMarker } from '../types/assets';
 
 // Fix Leaflet default icon path issue
@@ -296,7 +297,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                           marker.registrationToken === TagTypes.SUPERTAG) && (
                           <div>
                             <span className="text-gray-600">Temperature:</span>{' '}
-                            {marker.temperature ? `${marker.temperature.toFixed(2)}°F` : ''}
+                            {getTemperatureDisplay(marker.temperature)}
                           </div>
                         )}
                         <div className="flex flex-col gap-1">
