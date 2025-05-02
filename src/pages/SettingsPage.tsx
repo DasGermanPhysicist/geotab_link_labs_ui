@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
-import { Thermometer, ArrowLeft, Bell, Battery } from 'lucide-react';
+import { Thermometer, ArrowLeft, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface SettingsPageProps {
@@ -20,8 +20,6 @@ const DEFAULT_THRESHOLDS = {
   fahrenheit: { min: 32, max: 90 },
   celsius: { min: 0, max: 32 }
 };
-
-const DEFAULT_BATTERY_THRESHOLD = 20; // Default 20% battery threshold
 
 export function SettingsPage({
   searchTerm,
@@ -48,16 +46,6 @@ export function SettingsPage({
     return stored === 'true';
   });
 
-  const [batteryAlertsEnabled, setBatteryAlertsEnabled] = useState(() => {
-    const stored = localStorage.getItem('batteryAlertsEnabled');
-    return stored === 'true';
-  });
-
-  const [batteryThreshold, setBatteryThreshold] = useState(() => {
-    const stored = localStorage.getItem('batteryThreshold');
-    return stored ? parseInt(stored) : DEFAULT_BATTERY_THRESHOLD;
-  });
-
   useEffect(() => {
     localStorage.setItem('temperatureUnit', useCelsius ? 'celsius' : 'fahrenheit');
   }, [useCelsius]);
@@ -69,14 +57,6 @@ export function SettingsPage({
   useEffect(() => {
     localStorage.setItem('temperatureAlertsEnabled', temperatureAlertsEnabled.toString());
   }, [temperatureAlertsEnabled]);
-
-  useEffect(() => {
-    localStorage.setItem('batteryAlertsEnabled', batteryAlertsEnabled.toString());
-  }, [batteryAlertsEnabled]);
-
-  useEffect(() => {
-    localStorage.setItem('batteryThreshold', batteryThreshold.toString());
-  }, [batteryThreshold]);
 
   const handleUnitChange = (newUseCelsius: boolean) => {
     setUseCelsius(newUseCelsius);
@@ -246,63 +226,6 @@ export function SettingsPage({
                       <span className="text-xs text-gray-500">{range.min}°</span>
                       <span className="text-xs text-gray-500">{range.max}°</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Battery Alerts Toggle */}
-                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Battery className="w-5 h-5 text-[#004780]" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">Battery Alerts</div>
-                      <div className="text-sm text-gray-500">
-                        Enable alerts for low battery levels
-                      </div>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={batteryAlertsEnabled}
-                      onChange={(e) => setBatteryAlertsEnabled(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#87B812]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#87B812]"></div>
-                  </label>
-                </div>
-
-                {/* Battery Threshold */}
-                <div className={`space-y-4 transition-opacity ${batteryAlertsEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-                  <h3 className="text-lg font-medium text-gray-900">Battery Threshold</h3>
-                  
-                  <div className="mb-6">
-                    <div className="flex justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        Low Battery Threshold
-                      </label>
-                      <span className="text-sm text-gray-500">
-                        {batteryThreshold}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={5}
-                      max={50}
-                      step={5}
-                      value={batteryThreshold}
-                      onChange={(e) => setBatteryThreshold(Number(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#87B812]"
-                      disabled={!batteryAlertsEnabled}
-                    />
-                    <div className="flex justify-between mt-1">
-                      <span className="text-xs text-gray-500">5%</span>
-                      <span className="text-xs text-gray-500">50%</span>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Alert when battery level falls below this threshold
-                    </p>
                   </div>
                 </div>
 

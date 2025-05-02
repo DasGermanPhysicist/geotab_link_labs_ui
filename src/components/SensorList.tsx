@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Thermometer, Wifi, WifiOff, MapPin, Battery, Clock, X, ChevronRight, DoorOpen } from 'lucide-react';
+import { ChevronDown, ChevronUp, Thermometer, Wifi, WifiOff, MapPin, Battery, Clock, X, ChevronRight, DoorOpen, AlertTriangle } from 'lucide-react';
 import { Map } from './Map';
 import { ProcessedMarker } from '../types/assets';
 import { TagTypes } from '../lib/api';
@@ -20,13 +20,19 @@ interface SensorDetailModalProps {
 function SensorDetailModal({ sensor, superTag, onClose }: SensorDetailModalProps) {
   const connected = isConnected(sensor);
   const daysSinceLastConnection = getDaysSinceTimestamp(sensor.lastUpdate);
+  const hasOpenDoorAlert = sensor.doorSensorStatus === 'OPEN';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
       <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">{sensor.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">{sensor.name}</h3>
+            {hasOpenDoorAlert && (
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -89,7 +95,7 @@ function SensorDetailModal({ sensor, superTag, onClose }: SensorDetailModalProps
             </div>
 
             {sensor.registrationToken === TagTypes.DOOR_SENSOR && (
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className={`bg-gray-50 p-4 rounded-lg ${hasOpenDoorAlert ? 'bg-red-50' : ''}`}>
                 <div className="flex items-center gap-2">
                   <DoorOpen className={`w-5 h-5 ${
                     sensor.doorSensorStatus === 'OPEN' ? 'text-red-500' : 'text-green-500'
@@ -190,11 +196,16 @@ export function SensorList({ sensors, allAssets }: SensorListProps) {
         const superTag = findSuperTag(sensor);
         const daysSinceLastConnection = getDaysSinceTimestamp(sensor.lastUpdate);
         const isDoorSensor = sensor.registrationToken === TagTypes.DOOR_SENSOR;
+        const hasOpenDoorAlert = sensor.doorSensorStatus === 'OPEN';
 
         return (
           <div 
             key={sensor.macAddress}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+            className={`bg-white rounded-lg shadow-sm border transition-colors ${
+              hasOpenDoorAlert 
+                ? 'border-l-4 border-l-red-500 border-t border-r border-b border-gray-200' 
+                : 'border-gray-200'
+            }`}
           >
             <button
               onClick={() => toggleSensor(sensor)}
@@ -208,6 +219,9 @@ export function SensorList({ sensors, allAssets }: SensorListProps) {
                     <WifiOff className="w-5 h-5 text-red-500" />
                   )}
                   <span className="font-medium">{sensor.name}</span>
+                  {hasOpenDoorAlert && (
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                  )}
                 </div>
 
                 {/* Battery Status */}

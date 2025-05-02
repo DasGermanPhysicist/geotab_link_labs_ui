@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { ProcessedMarker } from '../types/assets';
-import { Bell, ChevronDown, ChevronUp, Thermometer, Battery, Clock } from 'lucide-react';
+import { Bell, ChevronDown, ChevronUp, Thermometer, Clock } from 'lucide-react';
 import { formatRelativeTime, formatLocalDateTime } from '../lib/dateUtils';
 
 interface AlertsPageProps {
@@ -17,9 +17,9 @@ interface Alert {
   id: string;
   assetName: string;
   timestamp: string;
-  type: 'temperature-high' | 'temperature-low' | 'battery';
-  value: number;
-  threshold: number;
+  type: 'temperature-high' | 'temperature-low';
+  value?: number;
+  threshold?: number;
 }
 
 const ALERT_WINDOW_HOURS = 168; // 7 days in hours
@@ -49,7 +49,7 @@ export function AlertsPage({
 
         assets.forEach(asset => {
           const assetTime = new Date(asset.lastUpdate);
-          if (assetTime < cutoffTime) return; // Skip if older than 7 days
+          if (assetTime < cutoffTime) return;
           if (asset.temperature === null) return;
 
           const temp = useCelsius 
@@ -81,27 +81,6 @@ export function AlertsPage({
       }
     }
 
-    // Battery Alerts
-    const batteryAlertsEnabled = localStorage.getItem('batteryAlertsEnabled') === 'true';
-    if (batteryAlertsEnabled) {
-      const batteryThreshold = parseInt(localStorage.getItem('batteryThreshold') || '20');
-      
-      assets.forEach(asset => {
-        const assetTime = new Date(asset.lastUpdate);
-        if (assetTime < cutoffTime) return; // Skip if older than 7 days
-        if (asset.battery.level !== null && asset.battery.level <= batteryThreshold) {
-          newAlerts.push({
-            id: `${asset.macAddress}-battery-${Date.now()}`,
-            assetName: asset.name,
-            timestamp: asset.lastUpdate,
-            type: 'battery',
-            value: asset.battery.level,
-            threshold: batteryThreshold
-          });
-        }
-      });
-    }
-
     // Sort alerts by timestamp, newest first
     newAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     
@@ -119,26 +98,18 @@ export function AlertsPage({
   };
 
   const getAlertIcon = (type: Alert['type']) => {
-    switch (type) {
-      case 'temperature-high':
-      case 'temperature-low':
-        return <Thermometer className={`w-5 h-5 ${
-          type === 'temperature-high' ? 'text-red-500' : 'text-blue-500'
-        }`} />;
-      case 'battery':
-        return <Battery className="w-5 h-5 text-orange-500" />;
-    }
+    return <Thermometer className={`w-5 h-5 ${
+      type === 'temperature-high' ? 'text-red-500' : 'text-blue-500'
+    }`} />;
   };
 
   const getAlertTitle = (alert: Alert) => {
     const unit = localStorage.getItem('temperatureUnit') === 'celsius' ? '°C' : '°F';
     switch (alert.type) {
       case 'temperature-high':
-        return `High Temperature Alert (${alert.value.toFixed(1)}${unit})`;
+        return `High Temperature Alert (${alert.value?.toFixed(1)}${unit})`;
       case 'temperature-low':
-        return `Low Temperature Alert (${alert.value.toFixed(1)}${unit})`;
-      case 'battery':
-        return `Low Battery Alert (${alert.value}%)`;
+        return `Low Temperature Alert (${alert.value?.toFixed(1)}${unit})`;
     }
   };
 
@@ -215,23 +186,17 @@ export function AlertsPage({
                           <div className="text-gray-900">{formatLocalDateTime(alert.timestamp)}</div>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-500">
-                            {alert.type === 'battery' ? 'Battery Level' : 'Temperature'}
-                          </div>
+                          <div className="text-sm font-medium text-gray-500">Temperature</div>
                           <div className={`text-gray-900 ${
-                            alert.type === 'temperature-high' ? 'text-red-600' :
-                            alert.type === 'temperature-low' ? 'text-blue-600' :
-                            'text-orange-600'
+                            alert.type === 'temperature-high' ? 'text-red-600' : 'text-blue-600'
                           }`}>
-                            {alert.value}{alert.type === 'battery' ? '%' : 
-                              `°${localStorage.getItem('temperatureUnit') === 'celsius' ? 'C' : 'F'}`}
+                            {alert.value?.toFixed(1)}°{localStorage.getItem('temperatureUnit') === 'celsius' ? 'C' : 'F'}
                           </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-500">Threshold</div>
                           <div className="text-gray-900">
-                            {alert.threshold}{alert.type === 'battery' ? '%' : 
-                              `°${localStorage.getItem('temperatureUnit') === 'celsius' ? 'C' : 'F'}`}
+                            {alert.threshold}°{localStorage.getItem('temperatureUnit') === 'celsius' ? 'C' : 'F'}
                           </div>
                         </div>
                       </div>
