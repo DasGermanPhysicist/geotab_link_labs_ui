@@ -1,4 +1,4 @@
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { format, formatDistanceToNow, parseISO, differenceInDays } from 'date-fns';
 
 /**
  * Formats a UTC timestamp to the local timezone with both date and time
@@ -67,6 +67,24 @@ export function formatRelativeTime(timestamp: string): string {
   } catch (error) {
     console.error('Error formatting relative time:', error);
     return 'Invalid date';
+  }
+}
+
+/**
+ * Calculates the number of days since a given timestamp
+ * @param timestamp - ISO 8601 timestamp string
+ * @returns Number of days since the timestamp
+ */
+export function getDaysSinceTimestamp(timestamp: string): number {
+  try {
+    const date = parseISO(timestamp);
+    if (isNaN(date.getTime())) {
+      return 0;
+    }
+    return differenceInDays(new Date(), date);
+  } catch (error) {
+    console.error('Error calculating days since timestamp:', error);
+    return 0;
   }
 }
 

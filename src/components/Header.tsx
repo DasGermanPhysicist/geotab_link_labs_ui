@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, HelpCircle, X, LogOut, User, ChevronDown, Menu } from 'lucide-react';
+import { Search, HelpCircle, X, LogOut, User, ChevronDown, Menu, Map, List, Settings, Bell } from 'lucide-react';
 import { OrgSiteSelector } from './OrgSiteSelector';
 import { logout } from '../lib/auth';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   searchTerm: string;
@@ -25,6 +26,8 @@ export function Header({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -37,7 +40,6 @@ export function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (showMobileMenu) {
       document.body.style.overflow = 'hidden';
@@ -52,6 +54,10 @@ export function Header({
   const handleLogout = () => {
     logout();
     window.location.reload();
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -110,6 +116,16 @@ export function Header({
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                     <button
                       onClick={() => {
+                        navigate('/settings');
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4 text-[#004780]" />
+                      Settings
+                    </button>
+                    <button
+                      onClick={() => {
                         setShowHelpModal(true);
                         setShowProfileMenu(false);
                       }}
@@ -161,8 +177,54 @@ export function Header({
               </div>
             </div>
 
+            {/* Navigation Links */}
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="space-y-2">
+                <Link
+                  to="/"
+                  onClick={() => setShowMobileMenu(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    isActive('/') ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <Map className="w-5 h-5" />
+                  Asset Trackers
+                </Link>
+                <Link
+                  to="/sensors"
+                  onClick={() => setShowMobileMenu(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    isActive('/sensors') ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <List className="w-5 h-5" />
+                  Sensor List
+                </Link>
+                <Link
+                  to="/alerts"
+                  onClick={() => setShowMobileMenu(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    isActive('/alerts') ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <Bell className="w-5 h-5" />
+                  Alerts
+                </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setShowMobileMenu(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    isActive('/settings') ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                  Settings
+                </Link>
+              </div>
+            </div>
+
             {/* Menu Items */}
-            <div className="flex-1 overflow-y-auto px-2 py-4">
+            <div className="flex-1 px-6 py-4">
               <div className="space-y-2">
                 {/* Help & Support */}
                 <button
@@ -179,7 +241,7 @@ export function Header({
             </div>
 
             {/* Sign Out Button */}
-            <div className="px-4 py-4 border-t border-gray-200">
+            <div className="px-6 py-4 border-t border-gray-200">
               <button
                 onClick={handleLogout}
                 className="w-full px-4 py-3 flex items-center gap-3 text-red-600 hover:bg-red-50 rounded-lg"

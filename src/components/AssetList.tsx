@@ -3,6 +3,7 @@ import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Wifi
 import { TagTypes } from '../lib/api';
 import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
+import { getTemperatureDisplay } from '../lib/temperature';
 
 interface AssetListProps {
   assets: ProcessedMarker[];
@@ -55,6 +56,24 @@ export function AssetList({
   const shouldShowChargeState = (asset: ProcessedMarker): boolean => {
     const capacity = Number(asset.batteryCapacity_mAh);
     return (capacity === 470 || capacity === 470.0) && asset.chargeState !== undefined;
+  };
+
+  // Filter assets based on view type
+  const filteredAssets = sortedAssets.filter(asset => {
+    if (assetViewType === 'supertags') {
+      return asset.registrationToken === TagTypes.SUPERTAG;
+    }
+    if (assetViewType === 'sensors') {
+      return asset.registrationToken !== TagTypes.SUPERTAG;
+    }
+    return true;
+  });
+
+  // Get counts for each type
+  const counts = {
+    all: assets.length,
+    supertags: assets.filter(a => a.registrationToken === TagTypes.SUPERTAG).length,
+    sensors: assets.filter(a => a.registrationToken !== TagTypes.SUPERTAG).length
   };
 
   return (
@@ -118,30 +137,40 @@ export function AssetList({
           </div>
         </div>
         
-        <div className="flex items-center gap-2 border border-gray-200 rounded-lg overflow-hidden">
+        {/* Asset Type Toggle - Grid layout for equal sizing */}
+        <div className="grid grid-cols-3 gap-2">
           <button
             onClick={() => onAssetViewChange('all')}
-            className={`flex-1 px-3 py-1.5 text-sm ${
-              assetViewType === 'all' ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+            className={`flex flex-col items-center justify-center px-2 py-2.5 text-sm rounded-lg transition-colors ${
+              assetViewType === 'all' 
+                ? 'bg-[#87B812] text-white' 
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
           >
-            All
+            <span className="font-medium">All</span>
+            <span className="text-xs mt-0.5 opacity-90">({counts.all})</span>
           </button>
           <button
             onClick={() => onAssetViewChange('supertags')}
-            className={`flex-1 px-3 py-1.5 text-sm ${
-              assetViewType === 'supertags' ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+            className={`flex flex-col items-center justify-center px-2 py-2.5 text-sm rounded-lg transition-colors ${
+              assetViewType === 'supertags' 
+                ? 'bg-[#87B812] text-white' 
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
           >
-            Supertags
+            <span className="font-medium">SuperTags</span>
+            <span className="text-xs mt-0.5 opacity-90">({counts.supertags})</span>
           </button>
           <button
             onClick={() => onAssetViewChange('sensors')}
-            className={`flex-1 px-3 py-1.5 text-sm ${
-              assetViewType === 'sensors' ? 'bg-[#87B812] text-white' : 'hover:bg-gray-50'
+            className={`flex flex-col items-center justify-center px-2 py-2.5 text-sm rounded-lg transition-colors ${
+              assetViewType === 'sensors' 
+                ? 'bg-[#87B812] text-white' 
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
           >
-            Sensors
+            <span className="font-medium">Sensors</span>
+            <span className="text-xs mt-0.5 opacity-90">({counts.sensors})</span>
           </button>
         </div>
       </div>
@@ -149,7 +178,7 @@ export function AssetList({
       {/* Asset List */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-3">
-          {sortedAssets.map((asset, index) => (
+          {filteredAssets.map((asset, index) => (
             <div
               key={index}
               className={`bg-white border rounded-lg cursor-pointer transition-all duration-200 hover:border-[#87B812] group
@@ -209,17 +238,15 @@ export function AssetList({
                     </div>
                   </div>
                   {(asset.registrationToken === TagTypes.TEMPERATURE || 
-                    asset.registrationToken === TagTypes.SUPERTAG) && (
+                    asset.registrationToken === TagTypes.SUPERTAG) && asset.temperature !== null && (
                     <div className="flex items-center gap-1.5">
                       <Thermometer className={`w-4 h-4 ${
-                        typeof asset.temperature === 'number' && asset.temperature >= 80 ? 'text-red-500' :
-                        typeof asset.temperature === 'number' && asset.temperature >= 70 ? 'text-orange-500' : 
+                        asset.temperature >= 80 ? 'text-red-500' :
+                        asset.temperature >= 70 ? 'text-orange-500' : 
                         'text-[#004780]'
                       }`} />
                       <span className="text-sm text-gray-600">
-                        {typeof asset.temperature === 'number' 
-                          ? `${asset.temperature.toFixed(2)}°F`
-                          : ''}
+                        {getTemperatureDisplay(asset.temperature)}
                       </span>
                     </div>
                   )}
@@ -263,6 +290,12 @@ export function AssetList({
               </div>
             </div>
           ))}
+
+          {filteredAssets.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-500">No assets found</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
