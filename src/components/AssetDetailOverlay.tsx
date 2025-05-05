@@ -19,7 +19,7 @@ export function AssetDetailOverlay({
   onToggleExpand,
   allAssets 
 }: AssetDetailOverlayProps) {
-  const [copiedField, setCopiedField] = React.useState<'mac' | 'serial' | null>(null);
+  const [copiedField, setCopiedField] = React.useState<'mac' | 'mac-no-colons' | 'serial' | null>(null);
   
   const getBatteryColor = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
     if (battery.status === 'Low') return 'text-orange-500';
@@ -39,7 +39,7 @@ export function AssetDetailOverlay({
     ? allAssets.find(a => a.name === asset.leashedToSuperTag)
     : null;
 
-  const copyToClipboard = async (text: string, field: 'mac' | 'serial') => {
+  const copyToClipboard = async (text: string, field: 'mac' | 'mac-no-colons' | 'serial') => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
@@ -47,6 +47,10 @@ export function AssetDetailOverlay({
     } catch (err) {
       console.error('Failed to copy text:', err);
     }
+  };
+
+  const getMacWithoutColons = (mac: string) => {
+    return mac.replace(/:/g, '');
   };
 
   return (
@@ -86,17 +90,30 @@ export function AssetDetailOverlay({
                   <Fingerprint className="w-5 h-5 text-[#87B812]" />
                   <span className="text-sm font-medium text-gray-600">MAC Address</span>
                 </div>
-                <button
-                  onClick={() => copyToClipboard(asset.macAddress, 'mac')}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Copy MAC Address"
-                >
-                  {copiedField === 'mac' ? (
-                    <Check className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <Copy className="w-4 h-4 text-gray-400" />
-                  )}
-                </button>
+                <div className="flex">
+                  <button
+                    onClick={() => copyToClipboard(asset.macAddress, 'mac')}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Copy MAC Address"
+                  >
+                    {copiedField === 'mac' ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => copyToClipboard(getMacWithoutColons(asset.macAddress), 'mac-no-colons')}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Copy MAC Address without colons"
+                  >
+                    {copiedField === 'mac-no-colons' ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <div className="text-xs font-mono text-gray-400">No :</div>
+                    )}
+                  </button>
+                </div>
               </div>
               <code className="bg-white px-3 py-2 rounded-lg text-sm font-mono text-gray-700 border border-gray-200">
                 {asset.macAddress}
