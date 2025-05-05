@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, WifiOff } from 'lucide-react';
+import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, WifiOff, Fingerprint, Barcode, Copy, Check } from 'lucide-react';
 import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import { TagTypes } from '../lib/api';
@@ -19,6 +19,8 @@ export function AssetDetailOverlay({
   onToggleExpand,
   allAssets 
 }: AssetDetailOverlayProps) {
+  const [copiedField, setCopiedField] = React.useState<'mac' | 'serial' | null>(null);
+  
   const getBatteryColor = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
     if (battery.status === 'Low') return 'text-orange-500';
     if (battery.level !== null) {
@@ -36,6 +38,16 @@ export function AssetDetailOverlay({
   const parentSuperTag = asset.leashedToSuperTag 
     ? allAssets.find(a => a.name === asset.leashedToSuperTag)
     : null;
+
+  const copyToClipboard = async (text: string, field: 'mac' | 'serial') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
+  };
 
   return (
     <div 
@@ -64,6 +76,59 @@ export function AssetDetailOverlay({
       {/* Expandable content */}
       <div className={`overflow-y-auto ${isExpanded ? 'max-h-[70vh]' : 'h-0'}`}>
         <div className="p-4 space-y-6">
+          {/* Asset Identifiers */}
+          <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+            <h3 className="font-medium text-gray-700">Asset Identifiers</h3>
+            
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="w-5 h-5 text-[#87B812]" />
+                  <span className="text-sm font-medium text-gray-600">MAC Address</span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(asset.macAddress, 'mac')}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Copy MAC Address"
+                >
+                  {copiedField === 'mac' ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Copy className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+              <code className="bg-white px-3 py-2 rounded-lg text-sm font-mono text-gray-700 border border-gray-200">
+                {asset.macAddress}
+              </code>
+            </div>
+
+            {asset.geotabSerialNumber && (
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Barcode className="w-5 h-5 text-[#87B812]" />
+                    <span className="text-sm font-medium text-gray-600">Geotab Serial Number</span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(asset.geotabSerialNumber || '', 'serial')}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Copy Serial Number"
+                  >
+                    {copiedField === 'serial' ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                <code className="bg-white px-3 py-2 rounded-lg text-sm font-mono text-gray-700 border border-gray-200">
+                  {asset.geotabSerialNumber}
+                </code>
+              </div>
+            )}
+          </div>
+
           {/* Key metrics */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gray-50 p-4 rounded-lg">

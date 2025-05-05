@@ -96,6 +96,47 @@ function App() {
     });
   }, [tags]);
 
+  // Filter assets based on searchTerm
+  const filteredAssets = useMemo(() => {
+    if (!searchTerm.trim()) return processedMarkers;
+
+    const lowercaseSearchTerm = searchTerm.toLowerCase().trim();
+    
+    return processedMarkers.filter(asset => {
+      // Check name
+      if (asset.name.toLowerCase().includes(lowercaseSearchTerm)) {
+        return true;
+      }
+      
+      // Check MAC address
+      if (asset.macAddress.toLowerCase().includes(lowercaseSearchTerm)) {
+        return true;
+      }
+      
+      // Check asset type
+      if (asset.type.toLowerCase().includes(lowercaseSearchTerm)) {
+        return true;
+      }
+      
+      // Check Geotab serial number if available
+      if (asset.geotabSerialNumber && asset.geotabSerialNumber.toLowerCase().includes(lowercaseSearchTerm)) {
+        return true;
+      }
+      
+      // Check leashed SuperTag name
+      if (asset.leashedToSuperTag && asset.leashedToSuperTag.toLowerCase().includes(lowercaseSearchTerm)) {
+        return true;
+      }
+
+      // Check door sensor status
+      if (asset.doorSensorStatus && asset.doorSensorStatus.toLowerCase().includes(lowercaseSearchTerm)) {
+        return true;
+      }
+      
+      return false;
+    });
+  }, [processedMarkers, searchTerm]);
+
   const handleLogin = () => {
     setAuthenticated(true);
   };
@@ -115,7 +156,7 @@ function App() {
           path="/" 
           element={
             <AssetTrackersPage
-              assets={processedMarkers}
+              assets={filteredAssets}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedSiteId={selectedSiteId}
@@ -127,7 +168,7 @@ function App() {
           path="/sensors" 
           element={
             <SensorsPage
-              assets={processedMarkers}
+              assets={filteredAssets}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedSiteId={selectedSiteId}
@@ -139,7 +180,7 @@ function App() {
           path="/alerts" 
           element={
             <AlertsPage
-              assets={processedMarkers}
+              assets={filteredAssets}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedSiteId={selectedSiteId}

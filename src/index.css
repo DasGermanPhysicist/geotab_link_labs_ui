@@ -62,3 +62,10 @@
 .ll-grid {
   display: grid;
 }
+
+/* Hide Leaflet layer control on mobile */
+@media (max-width: 768px) {
+  .leaflet-control-layers {
+    display: none !important;
+  }
+}

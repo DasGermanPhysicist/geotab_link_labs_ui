@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Battery, Tag, X, ChevronRight, Map as MapIcon } from 'lucide-react';
+import { Battery, Tag, X, ChevronRight, Map as MapIcon, ExternalLink } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { TagTypes } from '../lib/api';
@@ -99,6 +99,11 @@ const isValidPosition = (position: LatLngTuple): boolean => {
          position[1] >= -180 && position[1] <= 180;
 };
 
+// Create a Google Maps URL from latitude and longitude
+const createGoogleMapsUrl = (lat: number, lng: number): string => {
+  return `https://www.google.com/maps?q=${lat},${lng}`;
+};
+
 // Component to handle map view updates
 function MapUpdater({ center, zoom, selectedAsset }: { 
   center: LatLngTuple; 
@@ -140,7 +145,10 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   const [mapReady, setMapReady] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const markerRefs = useRef<{ [key: string]: L.Marker }>({});
-  const [mapType, setMapType] = useState<'terrain' | 'satellite'>('terrain');
+  const [mapType, setMapType] = useState<'street' | 'terrain' | 'satellite'>(() => {
+    const savedMapType = localStorage.getItem('mapType');
+    return (savedMapType as 'street' | 'terrain' | 'satellite') || 'street';
+  });
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
   const defaultCenter: LatLngTuple = [0, 0];
@@ -159,6 +167,11 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
       }
     }
   }, [selectedAsset]);
+
+  // Save map type to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('mapType', mapType);
+  }, [mapType]);
 
   const getBatteryDisplay = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
     if (!battery) return 'Unknown';
@@ -204,14 +217,14 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
             {/* Desktop layer control */}
             <div className="hidden md:block">
               <LayersControl position="topright" className="ll_leaflet-control-layers">
-                <LayersControl.BaseLayer checked name="Street">
+                <LayersControl.BaseLayer checked={mapType === 'street'} name="Street">
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
                 </LayersControl.BaseLayer>
 
-                <LayersControl.BaseLayer name="Terrain">
+                <LayersControl.BaseLayer checked={mapType === 'terrain'} name="Terrain">
                   <TileLayer
                     attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
                     url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
@@ -219,7 +232,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                   />
                 </LayersControl.BaseLayer>
 
-                <LayersControl.BaseLayer name="Satellite">
+                <LayersControl.BaseLayer checked={mapType === 'satellite'} name="Satellite">
                   <TileLayer
                     attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                     url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -232,25 +245,39 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
             {/* Mobile map type toggle */}
             <div className="md:hidden absolute bottom-24 right-4 z-[400]">
               <button
-                onClick={() => setMapType(mapType === 'terrain' ? 'satellite' : 'terrain')}
+                onClick={() => {
+                  const nextType = mapType === 'street' 
+                    ? 'terrain' 
+                    : mapType === 'terrain' 
+                      ? 'satellite' 
+                      : 'street';
+                  setMapType(nextType);
+                }}
                 className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2"
               >
                 <MapIcon className="w-5 h-5 text-gray-600" />
                 <span className="text-sm font-medium">
-                  {mapType === 'terrain' ? 'Satellite' : 'Terrain'}
+                  {mapType === 'street' ? 'Terrain' : mapType === 'terrain' ? 'Satellite' : 'Street'}
                 </span>
               </button>
             </div>
 
             {/* Mobile-specific layers */}
             <div className="md:hidden">
-              {mapType === 'terrain' ? (
+              {mapType === 'street' && (
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+              )}
+              {mapType === 'terrain' && (
                 <TileLayer
                   attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
                   url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
                   maxZoom={17}
                 />
-              ) : (
+              )}
+              {mapType === 'satellite' && (
                 <TileLayer
                   attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -284,6 +311,16 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                         <div>
                           <span className="text-gray-600">Location:</span>{' '}
                           {formatCoordinate(marker.position[0])}°N, {formatCoordinate(marker.position[1])}°W
+                          <a 
+                            href={createGoogleMapsUrl(marker.position[0], marker.position[1])} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 ml-2 text-[#87B812] hover:text-[#004780] transition-colors"
+                            title="Open in Google Maps"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span className="text-xs">Maps</span>
+                          </a>
                         </div>
                         <div className="group/time relative">
                           <span className="text-gray-600">Last Update:</span>{' '}
