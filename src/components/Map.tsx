@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Battery, Tag, X, ChevronRight, Map as MapIcon } from 'lucide-react';
+import { Battery, Tag, X, ChevronRight, Map as MapIcon, ExternalLink } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { TagTypes } from '../lib/api';
@@ -97,6 +97,11 @@ const isValidPosition = (position: LatLngTuple): boolean => {
          !isNaN(position[1]) &&
          position[0] >= -90 && position[0] <= 90 &&
          position[1] >= -180 && position[1] <= 180;
+};
+
+// Create a Google Maps URL from latitude and longitude
+const createGoogleMapsUrl = (lat: number, lng: number): string => {
+  return `https://www.google.com/maps?q=${lat},${lng}`;
 };
 
 // Component to handle map view updates
@@ -284,6 +289,16 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                         <div>
                           <span className="text-gray-600">Location:</span>{' '}
                           {formatCoordinate(marker.position[0])}°N, {formatCoordinate(marker.position[1])}°W
+                          <a 
+                            href={createGoogleMapsUrl(marker.position[0], marker.position[1])} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 ml-2 text-[#87B812] hover:text-[#004780] transition-colors"
+                            title="Open in Google Maps"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span className="text-xs">Maps</span>
+                          </a>
                         </div>
                         <div className="group/time relative">
                           <span className="text-gray-600">Last Update:</span>{' '}
