@@ -141,11 +141,21 @@ function MapUpdater({ center, zoom, selectedAsset }: {
   return null;
 }
 
+type MapLayerType = 'street' | 'terrain' | 'satellite';
+
 export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   const [mapReady, setMapReady] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const markerRefs = useRef<{ [key: string]: L.Marker }>({});
-  const [mapType, setMapType] = useState<'terrain' | 'satellite'>('terrain');
+  
+  // Initialize mapType from localStorage for persistence
+  const [mapType, setMapType] = useState<MapLayerType>(() => {
+    const savedMapType = localStorage.getItem('mapType');
+    if (savedMapType === 'street' || savedMapType === 'terrain' || savedMapType === 'satellite') {
+      return savedMapType;
+    }
+    return 'street'; // Default to street view
+  });
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
   const defaultCenter: LatLngTuple = [0, 0];
@@ -164,6 +174,12 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
       }
     }
   }, [selectedAsset]);
+
+  // Save map type to localStorage whenever it changes
+  const handleMapTypeChange = (type: MapLayerType) => {
+    setMapType(type);
+    localStorage.setItem('mapType', type);
+  };
 
   const getBatteryDisplay = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
     if (!battery) return 'Unknown';
@@ -206,17 +222,17 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
               </div>
             </div>
 
-            {/* Desktop layer control */}
+            {/* Desktop layer control - ONLY visible on md screens and up */}
             <div className="hidden md:block">
               <LayersControl position="topright" className="ll_leaflet-control-layers">
-                <LayersControl.BaseLayer checked name="Street">
+                <LayersControl.BaseLayer checked={mapType === 'street'} name="Street">
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
                 </LayersControl.BaseLayer>
 
-                <LayersControl.BaseLayer name="Terrain">
+                <LayersControl.BaseLayer checked={mapType === 'terrain'} name="Terrain">
                   <TileLayer
                     attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
                     url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
@@ -224,7 +240,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                   />
                 </LayersControl.BaseLayer>
 
-                <LayersControl.BaseLayer name="Satellite">
+                <LayersControl.BaseLayer checked={mapType === 'satellite'} name="Satellite">
                   <TileLayer
                     attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                     url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -234,28 +250,55 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
               </LayersControl>
             </div>
 
-            {/* Mobile map type toggle */}
+            {/* Custom mobile map type selector - shown ONLY on mobile */}
             <div className="md:hidden absolute bottom-24 right-4 z-[400]">
-              <button
-                onClick={() => setMapType(mapType === 'terrain' ? 'satellite' : 'terrain')}
-                className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2"
-              >
-                <MapIcon className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-medium">
-                  {mapType === 'terrain' ? 'Satellite' : 'Terrain'}
-                </span>
-              </button>
+              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <button
+                  onClick={() => handleMapTypeChange('street')}
+                  className={`w-full px-4 py-2 flex items-center justify-between ${
+                    mapType === 'street' ? 'bg-[#87B812] text-white' : 'text-gray-600'
+                  }`}
+                >
+                  <span className="text-sm font-medium">Street</span>
+                  {mapType === 'street' && <MapIcon className="w-4 h-4 ml-2" />}
+                </button>
+                <button
+                  onClick={() => handleMapTypeChange('terrain')}
+                  className={`w-full px-4 py-2 flex items-center justify-between ${
+                    mapType === 'terrain' ? 'bg-[#87B812] text-white' : 'text-gray-600'
+                  }`}
+                >
+                  <span className="text-sm font-medium">Terrain</span>
+                  {mapType === 'terrain' && <MapIcon className="w-4 h-4 ml-2" />}
+                </button>
+                <button
+                  onClick={() => handleMapTypeChange('satellite')}
+                  className={`w-full px-4 py-2 flex items-center justify-between ${
+                    mapType === 'satellite' ? 'bg-[#87B812] text-white' : 'text-gray-600'
+                  }`}
+                >
+                  <span className="text-sm font-medium">Satellite</span>
+                  {mapType === 'satellite' && <MapIcon className="w-4 h-4 ml-2" />}
+                </button>
+              </div>
             </div>
 
-            {/* Mobile-specific layers */}
+            {/* Mobile-specific layers - render the active layer */}
             <div className="md:hidden">
-              {mapType === 'terrain' ? (
+              {mapType === 'street' && (
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+              )}
+              {mapType === 'terrain' && (
                 <TileLayer
                   attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
                   url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
                   maxZoom={17}
                 />
-              ) : (
+              )}
+              {mapType === 'satellite' && (
                 <TileLayer
                   attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
