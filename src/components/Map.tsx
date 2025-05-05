@@ -141,20 +141,13 @@ function MapUpdater({ center, zoom, selectedAsset }: {
   return null;
 }
 
-type MapLayerType = 'street' | 'terrain' | 'satellite';
-
 export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   const [mapReady, setMapReady] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const markerRefs = useRef<{ [key: string]: L.Marker }>({});
-  
-  // Initialize mapType from localStorage for persistence
-  const [mapType, setMapType] = useState<MapLayerType>(() => {
+  const [mapType, setMapType] = useState<'street' | 'terrain' | 'satellite'>(() => {
     const savedMapType = localStorage.getItem('mapType');
-    if (savedMapType === 'street' || savedMapType === 'terrain' || savedMapType === 'satellite') {
-      return savedMapType;
-    }
-    return 'street'; // Default to street view
+    return (savedMapType as 'street' | 'terrain' | 'satellite') || 'street';
   });
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
@@ -175,11 +168,10 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
     }
   }, [selectedAsset]);
 
-  // Save map type to localStorage whenever it changes
-  const handleMapTypeChange = (type: MapLayerType) => {
-    setMapType(type);
-    localStorage.setItem('mapType', type);
-  };
+  // Save map type to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('mapType', mapType);
+  }, [mapType]);
 
   const getBatteryDisplay = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
     if (!battery) return 'Unknown';
@@ -222,7 +214,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
               </div>
             </div>
 
-            {/* Desktop layer control - ONLY visible on md screens and up */}
+            {/* Desktop layer control */}
             <div className="hidden md:block">
               <LayersControl position="topright" className="ll_leaflet-control-layers">
                 <LayersControl.BaseLayer checked={mapType === 'street'} name="Street">
@@ -250,40 +242,27 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
               </LayersControl>
             </div>
 
-            {/* Custom mobile map type selector - shown ONLY on mobile */}
+            {/* Mobile map type toggle */}
             <div className="md:hidden absolute bottom-24 right-4 z-[400]">
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <button
-                  onClick={() => handleMapTypeChange('street')}
-                  className={`w-full px-4 py-2 flex items-center justify-between ${
-                    mapType === 'street' ? 'bg-[#87B812] text-white' : 'text-gray-600'
-                  }`}
-                >
-                  <span className="text-sm font-medium">Street</span>
-                  {mapType === 'street' && <MapIcon className="w-4 h-4 ml-2" />}
-                </button>
-                <button
-                  onClick={() => handleMapTypeChange('terrain')}
-                  className={`w-full px-4 py-2 flex items-center justify-between ${
-                    mapType === 'terrain' ? 'bg-[#87B812] text-white' : 'text-gray-600'
-                  }`}
-                >
-                  <span className="text-sm font-medium">Terrain</span>
-                  {mapType === 'terrain' && <MapIcon className="w-4 h-4 ml-2" />}
-                </button>
-                <button
-                  onClick={() => handleMapTypeChange('satellite')}
-                  className={`w-full px-4 py-2 flex items-center justify-between ${
-                    mapType === 'satellite' ? 'bg-[#87B812] text-white' : 'text-gray-600'
-                  }`}
-                >
-                  <span className="text-sm font-medium">Satellite</span>
-                  {mapType === 'satellite' && <MapIcon className="w-4 h-4 ml-2" />}
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  const nextType = mapType === 'street' 
+                    ? 'terrain' 
+                    : mapType === 'terrain' 
+                      ? 'satellite' 
+                      : 'street';
+                  setMapType(nextType);
+                }}
+                className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2"
+              >
+                <MapIcon className="w-5 h-5 text-gray-600" />
+                <span className="text-sm font-medium">
+                  {mapType === 'street' ? 'Terrain' : mapType === 'terrain' ? 'Satellite' : 'Street'}
+                </span>
+              </button>
             </div>
 
-            {/* Mobile-specific layers - render the active layer */}
+            {/* Mobile-specific layers */}
             <div className="md:hidden">
               {mapType === 'street' && (
                 <TileLayer
