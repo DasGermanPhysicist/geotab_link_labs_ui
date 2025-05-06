@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Copy, Check, Fingerprint, Barcode, ChevronDown, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Copy, Check, Fingerprint, Barcode, ChevronDown, ChevronRight, History } from 'lucide-react';
 
 interface AssetIdentifiersProps {
   macAddress: string;
   geotabSerialNumber?: string;
+  nodeAddress?: string;
 }
 
-export function AssetIdentifiers({ macAddress, geotabSerialNumber }: AssetIdentifiersProps) {
+export function AssetIdentifiers({ macAddress, geotabSerialNumber, nodeAddress }: AssetIdentifiersProps) {
   const [copiedField, setCopiedField] = useState<'mac' | 'mac-no-colons' | 'serial' | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
+  const navigate = useNavigate();
 
   const copyToClipboard = async (text: string, field: 'mac' | 'mac-no-colons' | 'serial') => {
     try {
@@ -22,6 +25,12 @@ export function AssetIdentifiers({ macAddress, geotabSerialNumber }: AssetIdenti
 
   const getMacWithoutColons = (mac: string) => {
     return mac.replace(/:/g, '');
+  };
+
+  const handleViewLocationHistory = () => {
+    if (nodeAddress) {
+      navigate(`/location-history/${nodeAddress}`);
+    }
   };
 
   return (
@@ -38,6 +47,20 @@ export function AssetIdentifiers({ macAddress, geotabSerialNumber }: AssetIdenti
           )}
           Asset Identifiers
         </h2>
+        
+        {/* Location History Button at the top */}
+        {nodeAddress && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewLocationHistory();
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-[#87B812] text-white rounded-lg hover:bg-[#769f10] transition-colors"
+          >
+            <History className="w-5 h-5" />
+            <span>View Location History</span>
+          </button>
+        )}
       </button>
 
       {isExpanded && (

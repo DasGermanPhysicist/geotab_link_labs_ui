@@ -1,10 +1,11 @@
 import React from 'react';
-import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, WifiOff, Fingerprint, Barcode, Copy, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, WifiOff, Fingerprint, Barcode, Copy, Check, History } from 'lucide-react';
 import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import { TagTypes } from '../lib/api';
 import { BLEDevicesList } from './BLEDevicesList';
 import { getTemperatureDisplay } from '../lib/temperature';
+import { useNavigate } from 'react-router-dom';
 
 interface AssetDetailOverlayProps {
   asset: ProcessedMarker;
@@ -20,6 +21,7 @@ export function AssetDetailOverlay({
   allAssets 
 }: AssetDetailOverlayProps) {
   const [copiedField, setCopiedField] = React.useState<'mac' | 'mac-no-colons' | 'serial' | null>(null);
+  const navigate = useNavigate();
   
   const getBatteryColor = (battery: { status: 'OK' | 'Low'; level: number | null }) => {
     if (battery.status === 'Low') return 'text-orange-500';
@@ -52,6 +54,12 @@ export function AssetDetailOverlay({
   const getMacWithoutColons = (mac: string) => {
     return mac.replace(/:/g, '');
   };
+  
+  const handleViewLocationHistory = () => {
+    if (asset.nodeAddress) {
+      navigate(`/location-history/${asset.nodeAddress}`);
+    }
+  };
 
   return (
     <div 
@@ -80,6 +88,15 @@ export function AssetDetailOverlay({
       {/* Expandable content */}
       <div className={`overflow-y-auto ${isExpanded ? 'max-h-[70vh]' : 'h-0'}`}>
         <div className="p-4 space-y-6">
+          {/* Location History button at the TOP */}
+          <button
+            onClick={handleViewLocationHistory}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-[#87B812] text-white rounded-lg hover:bg-[#759e0f] transition-colors font-medium"
+          >
+            <History className="w-5 h-5" />
+            <span>View Location History</span>
+          </button>
+          
           {/* Asset Identifiers */}
           <div className="bg-gray-50 p-4 rounded-lg space-y-4">
             <h3 className="font-medium text-gray-700">Asset Identifiers</h3>

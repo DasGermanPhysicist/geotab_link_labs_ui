@@ -63,6 +63,19 @@
   display: grid;
 }
 
+/* Animation for the location history button */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 71, 128, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 71, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 71, 128, 0);
+  }
+}
+
 /* Hide Leaflet layer control on mobile */
 @media (max-width: 768px) {
   .leaflet-control-layers {

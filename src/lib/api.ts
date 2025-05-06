@@ -33,6 +33,7 @@ export interface Tag {
   batteryUsage_uAh?: number | string | null;
   alerts?: string[];
   geotabSerialNumber?: string;
+  chargeState?: 'not_charging' | 'charge_done' | 'charging';
 }
 
 export interface BatteryInfo {
@@ -48,6 +49,13 @@ export interface BLEAsset {
   leashedTime: string;
   lastUpdate: string;
   battery: BatteryInfo;
+}
+
+export interface LocationHistoryEntry {
+  latitude?: string;
+  longitude?: string;
+  time: string;
+  locationType?: string;
 }
 
 export const TagTypes = {
@@ -150,6 +158,23 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
     }));
   } catch (error) {
     console.error('Failed to fetch tags:', {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+    throw error;
+  }
+}
+
+export async function fetchLocationHistory(
+  nodeAddress: string, 
+  startDate: string, 
+  endDate: string
+): Promise<LocationHistoryEntry[]> {
+  try {
+    const url = `/networkAsset/airfinder/device-location-history/${nodeAddress}/${startDate}/${endDate}?showCellIds=`;
+    const response = await network_asset_api.get(url);
+    return response.data || [];
+  } catch (error) {
+    console.error('Failed to fetch location history:', {
       message: error instanceof Error ? error.message : 'Unknown error'
     });
     throw error;
