@@ -4,6 +4,7 @@ import { AssetTrackersPage } from './pages/AssetTrackersPage';
 import { SensorsPage } from './pages/SensorsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AlertsPage } from './pages/AlertsPage';
+import { LocationHistoryPage } from './pages/LocationHistoryPage';
 import { LoginScreen } from './components/LoginScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { fetchTags, Tag, getTagType, getBatteryInfo } from './lib/api';
@@ -192,6 +193,18 @@ function App() {
           path="/settings" 
           element={
             <SettingsPage
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedSiteId={selectedSiteId}
+              onSiteSelect={setSelectedSiteId}
+            />
+          } 
+        />
+        <Route 
+          path="/location-history/:nodeAddress" 
+          element={
+            <LocationHistoryPage
+              assets={filteredAssets}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedSiteId={selectedSiteId}

@@ -4,13 +4,14 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Battery, Tag, X, ChevronRight, Map as MapIcon, ExternalLink } from 'lucide-react';
+import { Battery, Tag, X, ChevronRight, Map as MapIcon, ExternalLink, History } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { TagTypes } from '../lib/api';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import { getTemperatureDisplay } from '../lib/temperature';
 import type { ProcessedMarker } from '../types/assets';
+import { useNavigate } from 'react-router-dom';
 
 // Fix Leaflet default icon path issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -149,6 +150,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
     const savedMapType = localStorage.getItem('mapType');
     return (savedMapType as 'street' | 'terrain' | 'satellite') || 'street';
   });
+  const navigate = useNavigate();
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
   const defaultCenter: LatLngTuple = [0, 0];
@@ -192,6 +194,12 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   const shouldShowChargeState = (marker: ProcessedMarker): boolean => {
     const capacity = Number(marker.batteryCapacity_mAh);
     return (capacity === 470 || capacity === 470.0) && marker.chargeState !== undefined;
+  };
+
+  const handleViewLocationHistory = () => {
+    if (selectedAsset?.nodeAddress) {
+      navigate(`/location-history/${selectedAsset.nodeAddress}`);
+    }
   };
 
   return (
@@ -370,6 +378,18 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
           </>
         )}
       </MapContainer>
+
+      {/* Floating Location History Button */}
+      {selectedAsset && selectedAsset.nodeAddress && (
+        <button
+          onClick={handleViewLocationHistory}
+          className="absolute left-1/2 transform -translate-x-1/2 bottom-8 z-[500] bg-[#004780] hover:bg-[#003d6f] text-white font-medium py-3 px-6 rounded-full shadow-xl flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#004780] animate-pulse"
+          style={{animation: 'pulse 2s infinite'}}
+        >
+          <History className="w-5 h-5" />
+          <span>View Location History</span>
+        </button>
+      )}
     </div>
   );
 }

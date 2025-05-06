@@ -57,6 +57,7 @@ export function Dashboard({ selectedAsset, markers, mapConfig, onAssetSelect }: 
           <AssetIdentifiers 
             macAddress={selectedAsset.macAddress}
             geotabSerialNumber={selectedAsset.geotabSerialNumber}
+            nodeAddress={selectedAsset.nodeAddress}
           />
           <div className="bg-white rounded-lg shadow-sm">
             <BLEAssetsList 
