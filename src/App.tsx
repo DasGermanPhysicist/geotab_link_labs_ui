@@ -7,7 +7,7 @@ import { AlertsPage } from './pages/AlertsPage';
 import { LocationHistoryPage } from './pages/LocationHistoryPage';
 import { LoginScreen } from './components/LoginScreen';
 import { LoadingScreen } from './components/LoadingScreen';
-import { fetchTags, Tag, getTagType, getBatteryInfo, TagTypes } from './lib/api';
+import { fetchTags, Tag, getTagType, getBatteryInfo } from './lib/api';
 import { LatLngTuple } from 'leaflet';
 import type { ProcessedMarker } from './types/assets';
 import { isAuthenticated } from './lib/auth';
@@ -74,18 +74,12 @@ function App() {
         ? Number(tag.fahrenheit) 
         : null;
 
-      // If it's a door sensor with temperature data, treat it as a temperature sensor
-      let registrationToken = tag.registrationToken;
-      if (tag.registrationToken === TagTypes.DOOR_SENSOR && temperature !== null) {
-        registrationToken = TagTypes.TEMPERATURE;
-      }
-
       return {
         position: tag.latitude != null && tag.longitude != null
           ? [Number(tag.latitude), Number(tag.longitude)] as LatLngTuple
           : DEFAULT_POSITION,
         name: tag.nodeName || 'Unnamed Asset',
-        type: getTagType(registrationToken),
+        type: getTagType(tag.registrationToken),
         temperature,
         battery: getBatteryInfo(tag),
         lastUpdate: tag.lastEventTime || new Date().toISOString(),
@@ -95,7 +89,7 @@ function App() {
         doorSensorStatus: tag.doorSensorAlarmStatus,
         leashedToSuperTag: findSuperTagName(tag.sourceSupertagId),
         nodeAddress: tag.nodeAddress,
-        registrationToken,
+        registrationToken: tag.registrationToken,
         chargeState: tag.chargeState,
         batteryCapacity_mAh: tag.batteryCapacity_mAh,
         geotabSerialNumber: tag.geotabSerialNumber
@@ -218,7 +212,7 @@ function App() {
             />
           } 
         />
-        <Route path="*" element={<Navigate to="/\" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
