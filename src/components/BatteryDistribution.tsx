@@ -28,10 +28,13 @@ export function BatteryDistribution({ assets }: BatteryDistributionProps) {
   const getPercentage = (value: number) => ((value / total) * 100).toFixed(1);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="bg-white rounded-lg shadow-sm px-4 py-3">
       <div className="flex items-center gap-3 mb-4">
         <Battery className="w-6 h-6 text-[#87B812]" />
         <h3 className="font-semibold text-lg">Battery Distribution</h3>
+        <div className="text-sm text-gray-500 ml-auto">
+          Total Devices: {total}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -78,12 +81,6 @@ export function BatteryDistribution({ assets }: BatteryDistributionProps) {
               style={{ width: `${(distribution.low / total) * 100}%` }}
             ></div>
           </div>
-        </div>
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <div className="text-sm text-gray-500">
-          Total Devices: {total}
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 import { SensorList } from '../components/SensorList';
 import { ProcessedMarker } from '../types/assets';
-import { TagTypes } from '../lib/api';
+import { TagRegistrationToken } from '../lib/api';
 import { Wifi, WifiOff, Clock } from 'lucide-react';
 
 interface SensorsPageProps {
@@ -27,7 +27,7 @@ export function SensorsPage({
 
   // Filter out SuperTags and get only sensor devices
   const sensors = assets.filter(asset => 
-    asset.registrationToken !== TagTypes.SUPERTAG
+    asset.registrationToken !== TagRegistrationToken.SUPERTAG
   );
 
   // Apply connection status filter

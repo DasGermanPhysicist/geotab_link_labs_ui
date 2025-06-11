@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Battery, Tag, X, ChevronRight, Map as MapIcon, ExternalLink, History } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
-import { TagTypes } from '../lib/api';
+import { TagRegistrationToken } from '../lib/api';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import { getTemperatureDisplay } from '../lib/temperature';
 import type { ProcessedMarker } from '../types/assets';
@@ -153,7 +153,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
   const navigate = useNavigate();
 
   const validMarkers = markers.filter(marker => isValidPosition(marker.position));
-  const defaultCenter: LatLngTuple = [0, 0];
+  const defaultCenter: LatLngTuple = [39.8283459, -98.5820546];
   const validCenter = isValidPosition(center) ? center : defaultCenter;
 
   const handleMapReady = useCallback((map: L.Map) => {
@@ -338,8 +338,8 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                             {formatLocalDateTime(marker.lastUpdate)}
                           </span>
                         </div>
-                        {(marker.registrationToken === TagTypes.TEMPERATURE || 
-                          marker.registrationToken === TagTypes.SUPERTAG) && (
+                        {(marker.registrationToken === TagRegistrationToken.TEMPERATURE || 
+                          marker.registrationToken === TagRegistrationToken.SUPERTAG) && (
                           <div>
                             <span className="text-gray-600">Temperature:</span>{' '}
                             {getTemperatureDisplay(marker.temperature)}
@@ -359,7 +359,7 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
                             </div>
                           )}
                         </div>
-                        {marker.registrationToken === TagTypes.SUPERTAG ? (
+                        {marker.registrationToken === TagRegistrationToken.SUPERTAG ? (
                           <div>
                             <span className="text-gray-600">Leashed Assets:</span> {marker.bleAssets.length}
                           </div>

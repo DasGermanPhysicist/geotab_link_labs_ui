@@ -13,6 +13,7 @@ export interface Organization {
 export interface Site {
   id: string;
   name: string;
+  organizationId: string;
 }
 
 export interface Tag {
@@ -34,6 +35,9 @@ export interface Tag {
   alerts?: string[];
   geotabSerialNumber?: string;
   chargeState?: 'not_charging' | 'charge_done' | 'charging';
+  hwId?: string;
+  filterId?: string;
+  msgType?: string;
 }
 
 export interface BatteryInfo {
@@ -58,22 +62,95 @@ export interface LocationHistoryEntry {
   locationType?: string;
 }
 
-export const TagTypes = {
-  SUPERTAG: 'D29B3BE8F2CC9A1A7051',
-  DOOR_SENSOR: '61697266696E64657200',
-  TEMPERATURE: '150285A4E29B7856C7CC'
+export const TagHwId = {
+  SUPERTAG_PRO: '00',  
+  SUPERTAG_PLUS: '02',  
+  SUPERTAG_RECHARGE: '0A'
 } as const;
 
-export function getTagType(registrationToken: string): string {
+export const TagName = {
+  SUPERTAG: 'SuperTag',
+  DOOR_SENSOR: 'Door Sensor',
+  TEMPERATURE: 'Temperature Tag',
+} as const;
+
+export const TagPrefixCode = {
+  SUPERTAG_PRO: 'LM',
+  SUPERTAG_PLUS: 'LN',
+  SUPERTAG_RECHARGE: 'LO',
+  DOOR_SENSOR: 'LW',
+  TEMPERATURE: 'LV',
+} as const;
+
+export const TagFilterId = {
+  TEMPERATURE_1: '11',
+  TEMPERATURE_2: '12',
+  DOOR_SENSOR_1: '38',
+  DOOR_SENSOR_2: '39'
+} as const;
+
+export const TagRegistrationToken = {
+  SUPERTAG: 'D29B3BE8F2CC9A1A7051',
+  DOOR_SENSOR: '61697266696E64657200',
+  TEMPERATURE: '150285A4E29B7856C7CC',
+} as const;
+
+export function getTagType(
+  registrationToken: string | undefined,
+  geotabSerialNumber: string | undefined,
+  hwId: string | undefined,
+  filterId: string | undefined,
+  msgType: string | undefined): string {
   switch (registrationToken) {
-    case TagTypes.SUPERTAG:
+    case TagRegistrationToken.SUPERTAG:
+      switch (hwId) {
+        case TagHwId.SUPERTAG_PRO:
+          return 'SuperTag Pro';
+        case TagHwId.SUPERTAG_PLUS:
+          return 'SuperTag Plus';
+        case TagHwId.SUPERTAG_RECHARGE:
+          return 'SuperTag Recharge';
+      }
       return 'SuperTag';
-    case TagTypes.DOOR_SENSOR:
+    case TagRegistrationToken.DOOR_SENSOR:
+      switch (filterId) {
+        case TagFilterId.TEMPERATURE_1:
+          return 'Temperature Tag';
+        case TagFilterId.TEMPERATURE_2:
+          return 'Temperature Tag';
+        case TagFilterId.DOOR_SENSOR_1:
+          return 'Door Sensor';
+        case TagFilterId.DOOR_SENSOR_2:
+          return 'Door Sensor';
+      }
+      switch (msgType) {
+        case TagFilterId.TEMPERATURE_1:
+          return 'Temperature Tag';
+        case TagFilterId.TEMPERATURE_2:
+          return 'Temperature Tag';
+        case TagFilterId.DOOR_SENSOR_1:
+          return 'Door Sensor';
+        case TagFilterId.DOOR_SENSOR_2:
+          return 'Door Sensor';
+      }
       return 'Door Sensor';
-    case TagTypes.TEMPERATURE:
+    case TagRegistrationToken.TEMPERATURE:
       return 'Temperature Tag';
     default:
-      return 'BLE Tag';
+      switch (geotabSerialNumber?.slice(0, 2)) {
+        case TagPrefixCode.SUPERTAG_PRO:
+          return 'SuperTag Pro';
+        case TagPrefixCode.SUPERTAG_PLUS:
+          return 'SuperTag Plus';
+        case TagPrefixCode.SUPERTAG_RECHARGE:
+          return 'SuperTag Recharge';
+        case TagPrefixCode.DOOR_SENSOR:
+          return 'Door Sensor';
+        case TagPrefixCode.TEMPERATURE:
+          return 'Temperature Tag';
+        default:
+          return 'BLE Tag';
+      }
   }
 }
 
@@ -114,7 +191,8 @@ export async function fetchCurrentUserSites(): Promise<Site[]> {
     const response = await network_asset_api.get('/networkAsset/airfinder/sites?currentUser=true');
     return (response.data || []).map((site: any) => ({
       id: String(site.id || ''),
-      name: String(site.value || site.name || site.siteName || 'Unnamed Site')
+      name: String(site.value || site.name || site.siteName || 'Unnamed Site'),
+      organizationId: site.assetInfo.metadata.props.organizationId,
     }));
   } catch (error) {
     console.error('Failed to fetch current user sites:', {
@@ -129,7 +207,8 @@ export async function fetchSites(organizationId: string): Promise<Site[]> {
     const response = await network_asset_api.get(`/networkAsset/airfinder/organization/${organizationId}/sites`);
     return (response.data || []).map((site: any) => ({
       id: String(site.id || ''),
-      name: String(site.value || site.name || site.siteName || 'Unnamed Site')
+      name: String(site.value || site.name || site.siteName || 'Unnamed Site'),
+      organizationId: site.assetInfo.metadata.props.organizationId,
     }));
   } catch (error) {
     console.error('Failed to fetch sites:', {
