@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Thermometer, Wifi, WifiOff, MapPin, Battery, Clock, X, ChevronRight, DoorOpen, AlertTriangle } from 'lucide-react';
 import { Map } from './Map';
 import { ProcessedMarker } from '../types/assets';
-import { TagTypes } from '../lib/api';
+import { TagRegistrationToken } from '../lib/api';
 import { formatRelativeTime, formatLocalDateTime, getDaysSinceTimestamp } from '../lib/dateUtils';
 import { getTemperatureDisplay } from '../lib/temperature';
 
@@ -94,7 +94,7 @@ function SensorDetailModal({ sensor, superTag, onClose }: SensorDetailModalProps
               </div>
             </div>
 
-            {sensor.registrationToken === TagTypes.DOOR_SENSOR && (
+            {sensor.registrationToken === TagRegistrationToken.DOOR_SENSOR && (
               <div className={`bg-gray-50 p-4 rounded-lg ${hasOpenDoorAlert ? 'bg-red-50' : ''}`}>
                 <div className="flex items-center gap-2">
                   <DoorOpen className={`w-5 h-5 ${
@@ -185,7 +185,7 @@ export function SensorList({ sensors, allAssets }: SensorListProps) {
     if (!sensor.leashedToSuperTag) return null;
     return allAssets.find(asset => 
       asset.name === sensor.leashedToSuperTag && 
-      asset.registrationToken === TagTypes.SUPERTAG
+      asset.registrationToken === TagRegistrationToken.SUPERTAG
     );
   };
 
@@ -195,7 +195,7 @@ export function SensorList({ sensors, allAssets }: SensorListProps) {
         const connected = isConnected(sensor);
         const superTag = findSuperTag(sensor);
         const daysSinceLastConnection = getDaysSinceTimestamp(sensor.lastUpdate);
-        const isDoorSensor = sensor.registrationToken === TagTypes.DOOR_SENSOR;
+        const isDoorSensor = sensor.registrationToken === TagRegistrationToken.DOOR_SENSOR;
         const hasOpenDoorAlert = sensor.doorSensorStatus === 'OPEN';
 
         return (

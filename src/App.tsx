@@ -79,7 +79,7 @@ function App() {
           ? [Number(tag.latitude), Number(tag.longitude)] as LatLngTuple
           : DEFAULT_POSITION,
         name: tag.nodeName || 'Unnamed Asset',
-        type: getTagType(tag.registrationToken),
+        type: getTagType(tag.registrationToken, tag.geotabSerialNumber, tag.hwId, tag.filterId, tag.msgType),
         temperature,
         battery: getBatteryInfo(tag),
         lastUpdate: tag.lastEventTime || new Date().toISOString(),
@@ -92,7 +92,10 @@ function App() {
         registrationToken: tag.registrationToken,
         chargeState: tag.chargeState,
         batteryCapacity_mAh: tag.batteryCapacity_mAh,
-        geotabSerialNumber: tag.geotabSerialNumber
+        geotabSerialNumber: tag.geotabSerialNumber,
+        hwId: tag.hwId,
+        filterId: tag.filterId,
+        msgType: tag.msgType
       };
     });
   }, [tags]);

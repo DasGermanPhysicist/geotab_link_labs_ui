@@ -55,7 +55,7 @@ export function AssetTrackersPage({
   };
 
   const mapConfig = {
-    center: selectedAsset ? selectedAsset.position : assets[0]?.position || [36.1428, -78.8846],
+    center: selectedAsset ? selectedAsset.position : assets[0]?.position || [39.8283459, -98.5820546],
     zoom: selectedAsset ? 15 : 13
   };
 
@@ -74,11 +74,11 @@ export function AssetTrackersPage({
         <Navigation />
       </div>
 
-      <main className="h-[calc(100vh-125px)] relative">
+      <main className="h-[calc(100vh-153px)] relative">
         {/* Desktop Layout */}
         <div className="hidden md:flex h-full">
           {/* Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200">
+          <div className="w-2/10 bg-white border-r border-gray-200">
             <div className="p-4 border-b border-gray-200">
               <div className="relative">
                 <input
@@ -90,7 +90,7 @@ export function AssetTrackersPage({
                 />
               </div>
             </div>
-            <div className="overflow-y-auto h-[calc(100%-73px)]">
+            <div className="overflow-y-auto h-[calc(100%-75px)]">
               <AssetList 
                 assets={assets}
                 selectedAsset={selectedAsset}
@@ -102,7 +102,7 @@ export function AssetTrackersPage({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 p-6">
             <Dashboard 
               selectedAsset={selectedAsset}
               markers={assets}

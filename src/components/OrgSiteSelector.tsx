@@ -9,90 +9,87 @@ interface OrgSiteSelectorProps {
 export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [sites, setSites] = useState<Site[]>([]);
-  const [selectedOrgId, setSelectedOrgId] = useState<string>(() => 
-    localStorage.getItem('selectedOrgId') || ''
-  );
-  const [selectedSiteId, setSelectedSiteId] = useState<string>(() => 
-    localStorage.getItem('selectedSiteId') || ''
-  );
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+  const [selectedSiteId, setSelectedSiteId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
-  const [hasOrgAccess, setHasOrgAccess] = useState<boolean | null>(null);
+  const [hasOrgAccess, setHasOrgAccess] = useState<boolean | null>(true);
 
   useEffect(() => {
-    loadInitialData();
+    initLoad();
   }, []);
-
-  useEffect(() => {
-    if (selectedOrgId) {
-      localStorage.setItem('selectedOrgId', selectedOrgId);
-      loadSites(selectedOrgId);
-    } else if (hasOrgAccess === false) {
-      // If user doesn't have org access, we don't clear the sites
-      // as they're loaded directly from currentUser endpoint
-    } else {
-      setSites([]);
-      setSelectedSiteId('');
-      localStorage.removeItem('selectedOrgId');
-      localStorage.removeItem('selectedSiteId');
-    }
-  }, [selectedOrgId, hasOrgAccess]);
-
+  
   useEffect(() => {
     if (selectedSiteId) {
-      localStorage.setItem('selectedSiteId', selectedSiteId);
+      sessionStorage.setItem('selectedSiteId', selectedSiteId);
       onSiteSelect(selectedSiteId);
-    } else {
-      localStorage.removeItem('selectedSiteId');
     }
   }, [selectedSiteId, onSiteSelect]);
 
-  const loadInitialData = async () => {
+  useEffect(() => {
+    if (selectedOrgId) {
+      getSites(selectedOrgId);
+    }
+  }, [selectedOrgId]);
+
+  const initLoad = async () => {
+    await getOrgs();
+  };
+
+  const getOrgs = async () => {
     try {
       setLoading(true);
       const orgs = await fetchOrganizations();
-      
+
       if (orgs.length === 0) {
-        // User doesn't have organization access, load sites directly
         setHasOrgAccess(false);
         const userSites = await fetchCurrentUserSites();
         setSites(userSites);
+        setSelectedSiteId(userSites[0]?.id || '');
         setOrganizations([]);
       } else {
-        // User has organization access, proceed with normal flow
         setHasOrgAccess(true);
-        const sortedOrgs = orgs.sort((a, b) => 
+        const sortedOrgs = orgs.slice().sort((a, b) => 
           (a.name || '').localeCompare(b.name || '')
         );
         setOrganizations(sortedOrgs);
-
-        // If we have a stored orgId, load its sites
-        if (selectedOrgId) {
-          await loadSites(selectedOrgId);
+        if (sessionStorage.getItem('selectedOrgId')) {
+          setSelectedOrgId(sessionStorage.getItem('selectedOrgId') ?? '');
+        } else {
+          setSelectedOrgId(sortedOrgs[0].id);
+          sessionStorage.setItem('selectedOrgId', sortedOrgs[0].id);
         }
       }
       setError(null);
     } catch (err) {
-      setError('Failed to load data');
+      setError('Failed to get organizations');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadSites = async (orgId: string) => {
+  const getSites = async (orgId: string) => {
     try {
       setLoading(true);
-      const data = await fetchSites(orgId);
-      const sortedData = data.sort((a, b) => 
+      const sites = await fetchSites(orgId);
+      const sortedSites = sites.slice().sort((a, b) => 
         (a.name || '').localeCompare(b.name || '')
       );
-      setSites(sortedData);
+      setSites(sortedSites);
+      if (sortedSites[0].organizationId === sessionStorage.getItem('selectedOrgId') &&
+          sessionStorage.getItem('selectedSiteId')) {
+          setSelectedSiteId(sessionStorage.getItem('selectedSiteId') ?? '');
+      } else {
+        sessionStorage.setItem('selectedSiteId', sortedSites[0].id);
+        setSelectedSiteId(sortedSites[0].id);
+      }
+      sessionStorage.setItem('selectedOrgId', selectedOrgId);
       setError(null);
     } catch (err) {
-      setError('Failed to load sites');
+      setError('Failed to get sites');
       console.error(err);
     } finally {
       setLoading(false);
