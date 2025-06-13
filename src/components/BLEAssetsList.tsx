@@ -4,17 +4,18 @@ import { getBatteryInfo } from '../lib/api';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import type { ProcessedMarker } from '../types/assets';
 
-interface BLEAsset {
-  nodeName: string;
-  connected: boolean;
-  lastEventTime: string;
-  batteryVoltage: string;
-  lowVoltageFlag: boolean;
-  batteryStatus: number | string;
-  batteryCapacity_mAh: number | string;
-  batteryConsumed_mAh?: number | string | null;
-  batteryUsage_uAh?: number | string | null;
-}
+// Feel like this is important, but it's not being used...
+// interface BLEAsset {
+//   nodeName: string;
+//   connected: boolean;
+//   lastEventTime: string;
+//   batteryVoltage: string;
+//   lowVoltageFlag: boolean;
+//   batteryStatus: number | string;
+//   batteryCapacity_mAh: number | string;
+//   batteryConsumed_mAh?: number | string | null;
+//   batteryUsage_uAh?: number | string | null;
+// }
 
 interface BLEAssetsListProps {
   assets: ProcessedMarker[];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Wifi, WifiOff, Box } from 'lucide-react';
+import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Box } from 'lucide-react';
 import { TagName, TagRegistrationToken } from '../lib/api';
 import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';

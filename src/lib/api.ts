@@ -8,12 +8,21 @@ const NETWORK_ASSET_API_URL = import.meta.env.VITE_NETWORK_ASSET_API_URL;
 export interface Organization {
   id: string;
   name: string;
+  value?: string;
 }
 
 export interface Site {
   id: string;
   name: string;
-  organizationId: string;
+  value?: string;
+  siteName?: string;
+  assetInfo: {
+    metadata: {
+      props: {
+        organizationId: string;
+      };
+    };
+  };
 }
 
 export interface Tag {
@@ -34,6 +43,7 @@ export interface Tag {
   batteryUsage_uAh?: number | string | null;
   alerts?: string[];
   geotabSerialNumber?: string;
+  geotabSerial?: string;
   chargeState?: 'not_charging' | 'charge_done' | 'charging';
   hwId?: string;
   filterId?: string;
@@ -173,9 +183,9 @@ network_asset_api.interceptors.request.use((config) => {
 export async function fetchOrganizations(): Promise<Organization[]> {
   try {
     const response = await network_asset_api.get('/networkAsset/airfinder/organizations');
-    const organizations = (response.data || []).map((org: any) => ({
-      id: String(org.id || ''),
-      name: String(org.value || org.name || 'Unnamed Organization')
+    const organizations = (response.data ?? []).map((org: Organization) => ({
+      id: String(org.id ?? ''),
+      name: String(org.value ?? org.name ?? 'Unnamed Organization')
     }));
     return organizations;
   } catch (error) {
@@ -189,9 +199,9 @@ export async function fetchOrganizations(): Promise<Organization[]> {
 export async function fetchCurrentUserSites(): Promise<Site[]> {
   try {
     const response = await network_asset_api.get('/networkAsset/airfinder/sites?currentUser=true');
-    return (response.data || []).map((site: any) => ({
-      id: String(site.id || ''),
-      name: String(site.value || site.name || site.siteName || 'Unnamed Site'),
+    return (response.data ?? []).map((site: Site) => ({
+      id: String(site.id ?? ''),
+      name: String(site.value ?? site.name ?? site.siteName ?? 'Unnamed Site'),
       organizationId: site.assetInfo.metadata.props.organizationId,
     }));
   } catch (error) {
@@ -205,9 +215,9 @@ export async function fetchCurrentUserSites(): Promise<Site[]> {
 export async function fetchSites(organizationId: string): Promise<Site[]> {
   try {
     const response = await network_asset_api.get(`/networkAsset/airfinder/organization/${organizationId}/sites`);
-    return (response.data || []).map((site: any) => ({
-      id: String(site.id || ''),
-      name: String(site.value || site.name || site.siteName || 'Unnamed Site'),
+    return (response.data ?? []).map((site: Site) => ({
+      id: String(site.id ?? ''),
+      name: String(site.value ?? site.name ?? site.siteName ?? 'Unnamed Site'),
       organizationId: site.assetInfo.metadata.props.organizationId,
     }));
   } catch (error) {
@@ -231,9 +241,9 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
     });
 
     const response = await network_asset_api.get(`/networkAsset/airfinder/v4/tags?${params}`);
-    return (response.data || []).map((tag: any) => ({
+    return (response.data ?? []).map((tag: Tag) => ({
       ...tag,
-      geotabSerialNumber: tag.geotabSerialNumber || tag.geotabSerial || null
+      geotabSerialNumber: tag.geotabSerialNumber ?? tag.geotabSerial ?? null
     }));
   } catch (error) {
     console.error('Failed to fetch tags:', {
@@ -251,7 +261,7 @@ export async function fetchLocationHistory(
   try {
     const url = `/networkAsset/airfinder/device-location-history/${nodeAddress}/${startDate}/${endDate}?showCellIds=`;
     const response = await network_asset_api.get(url);
-    return response.data || [];
+    return response.data ?? [];
   } catch (error) {
     console.error('Failed to fetch location history:', {
       message: error instanceof Error ? error.message : 'Unknown error'

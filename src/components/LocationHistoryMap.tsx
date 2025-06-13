@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap, LayersControl } from 'react-leaflet';
 import { LatLngTuple, LatLngExpression, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Clock, Navigation, MapPin, Wifi, Signal } from 'lucide-react';
+import { Clock, Navigation, MapPin, Signal, Map as MapIcon } from 'lucide-react';
 import { LocationHistoryEntry } from '../lib/api';
 import { formatLocalDateTime } from '../lib/dateUtils';
 
@@ -128,8 +128,13 @@ const LocationHistoryMap: React.FC<LocationHistoryMapProps> = ({ historyData, se
     !isNaN(Number(entry.latitude)) && !isNaN(Number(entry.longitude))
   );
   
+  // Save map type to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('mapType', mapType);
+  }, [mapType]);
+
   // Default center if no valid locations
-  const defaultCenter: LatLngTuple = [36.1428, -78.8846];
+  const defaultCenter: LatLngTuple = [39.8283459, -98.5820546];
   
   // Create polyline coordinates from points with valid coordinates
   const polylinePositions: LatLngExpression[] = validLocations.map(
@@ -146,6 +151,20 @@ const LocationHistoryMap: React.FC<LocationHistoryMapProps> = ({ historyData, se
     );
   }
   
+  const handleMobileMapTypeToggle = () => {
+    switch (mapType) {
+      case 'street':
+        setMapType('terrain');
+        break;
+      case 'terrain':
+        setMapType('satellite');
+        break;
+      case 'satellite':
+        setMapType('street');
+        break;
+    }
+  }
+
   return (
     <div className="w-full h-full rounded-lg overflow-hidden border border-gray-200">
       <MapContainer 
@@ -155,33 +174,73 @@ const LocationHistoryMap: React.FC<LocationHistoryMapProps> = ({ historyData, se
         zoomControl={false}
         key={`map-${validLocations.length}-${selectedLocation?.time || 'none'}`} // Force re-render when data changes
       >
+        <>
+        <MapUpdater historyData={validLocations} selectedLocation={selectedLocation} />
 
-        <LayersControl position="topright" className="ll_leaflet-control-layers">
-          <LayersControl.BaseLayer checked={mapType === 'street'} name="Street">
+        {/* Desktop layer control */}
+        <div className="hidden md:block">
+          <LayersControl position="topright" className="ll_leaflet-control-layers">
+            <LayersControl.BaseLayer checked={mapType === 'street'} name="Street">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+
+            <LayersControl.BaseLayer checked={mapType === 'terrain'} name="Terrain">
+              <TileLayer
+                attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                maxZoom={17}
+              />
+            </LayersControl.BaseLayer>
+
+            <LayersControl.BaseLayer checked={mapType === 'satellite'} name="Satellite">
+              <TileLayer
+                attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={19}
+              />
+            </LayersControl.BaseLayer>
+          </LayersControl>
+        </div>
+        
+        {/* Mobile map type toggle */}
+        <div className="md:hidden absolute bottom-24 right-4 z-[400]">
+          <button
+            onClick={() => {handleMobileMapTypeToggle();}}
+            className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2"
+          >
+            <MapIcon className="w-5 h-5 text-gray-600" />
+            <span className="text-sm font-medium">
+              {mapType.charAt(0).toUpperCase() + mapType.slice(1)}
+            </span>
+          </button>
+        </div>
+
+        {/* Mobile-specific layers */}
+        <div className="md:hidden">
+          {mapType === 'street' && (
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-          </LayersControl.BaseLayer>
-
-          <LayersControl.BaseLayer checked={mapType === 'terrain'} name="Terrain">
+          )}
+          {mapType === 'terrain' && (
             <TileLayer
-              attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+              attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
               url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
               maxZoom={17}
             />
-          </LayersControl.BaseLayer>
-
-          <LayersControl.BaseLayer checked={mapType === 'satellite'} name="Satellite">
+          )}
+          {mapType === 'satellite' && (
             <TileLayer
               attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               maxZoom={19}
             />
-          </LayersControl.BaseLayer>
-        </LayersControl>
-        
-        <MapUpdater historyData={validLocations} selectedLocation={selectedLocation} />
+          )}
+        </div>
         
         {/* Show markers for each location */}
         {validLocations.map((entry, index) => {
@@ -232,6 +291,7 @@ const LocationHistoryMap: React.FC<LocationHistoryMapProps> = ({ historyData, se
             dashArray="5, 5"
           />
         )}
+        </>
       </MapContainer>
     </div>
   );

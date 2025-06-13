@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Battery, Tag, X, ChevronRight, Map as MapIcon, ExternalLink, History } from 'lucide-react';
+import { Battery, Map as MapIcon, ExternalLink, History } from 'lucide-react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import { TagRegistrationToken } from '../lib/api';
@@ -14,7 +14,11 @@ import type { ProcessedMarker } from '../types/assets';
 import { useNavigate } from 'react-router-dom';
 
 // Fix Leaflet default icon path issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+interface IconWithInternalMethods extends L.Icon.Default {
+  _getIconUrl?: unknown;
+}
+
+delete (L.Icon.Default.prototype as IconWithInternalMethods)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -46,7 +50,7 @@ const SelectedIcon = L.divIcon({
 });
 
 // Create custom cluster icon
-const createClusterCustomIcon = function (cluster: any) {
+const createClusterCustomIcon = (cluster: L.MarkerCluster) => {
   const count = cluster.getChildCount();
   const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
   const sizeMap = {
@@ -202,13 +206,27 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
     }
   };
 
+  const handleMobileMapTypeToggle = () => {
+    switch (mapType) {
+      case 'street':
+        setMapType('terrain');
+        break;
+      case 'terrain':
+        setMapType('satellite');
+        break;
+      case 'satellite':
+        setMapType('street');
+        break;
+    }
+  }
+
   return (
     <div className="relative h-full [&_.ll_leaflet-control-container]:z-[5]">
       <MapContainer 
         center={validCenter}
         zoom={zoom} 
         style={{ height: '100%', width: '100%', borderRadius: '0.5rem' }}
-        whenReady={(map) => handleMapReady(map.target)}
+        whenReady={(map: L.LeafletEvent) => handleMapReady(map.target)}
         zoomControl={false}
         className="ll_leaflet-container"
       >
@@ -253,19 +271,12 @@ export function Map({ center, markers, zoom = 13, selectedAsset }: MapProps) {
             {/* Mobile map type toggle */}
             <div className="md:hidden absolute bottom-24 right-4 z-[400]">
               <button
-                onClick={() => {
-                  const nextType = mapType === 'street' 
-                    ? 'terrain' 
-                    : mapType === 'terrain' 
-                      ? 'satellite' 
-                      : 'street';
-                  setMapType(nextType);
-                }}
+                onClick={() => {handleMobileMapTypeToggle();}}
                 className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2"
               >
                 <MapIcon className="w-5 h-5 text-gray-600" />
                 <span className="text-sm font-medium">
-                  {mapType === 'street' ? 'Terrain' : mapType === 'terrain' ? 'Satellite' : 'Street'}
+                  {mapType.charAt(0).toUpperCase() + mapType.slice(1)}
                 </span>
               </button>
             </div>

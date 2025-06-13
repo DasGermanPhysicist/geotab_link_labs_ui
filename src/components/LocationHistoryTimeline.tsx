@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
 import { LocationHistoryEntry } from '../lib/api';
 import { 
   formatLocalDateTime, 
   formatRelativeTime, 
   getLocalDay, 
   formatDay,
-  convertUTCToLocal
 } from '../lib/dateUtils';
-import { MapPin, Navigation, Clock, ChevronDown, ChevronUp, Wifi, Radio, Smartphone, RefreshCw, Sparkles } from 'lucide-react';
+import { MapPin, Navigation, ChevronDown, ChevronUp, Wifi, Radio, Smartphone, RefreshCw, Sparkles } from 'lucide-react';
 
 interface LocationHistoryTimelineProps {
   historyData: LocationHistoryEntry[];

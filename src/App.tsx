@@ -9,66 +9,50 @@ import { LoginScreen } from './components/LoginScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { fetchTags, Tag, getTagType, getBatteryInfo } from './lib/api';
 import { LatLngTuple } from 'leaflet';
-import type { ProcessedMarker } from './types/assets';
 import { isAuthenticated } from './lib/auth';
 import { runningInGeotab } from './lib/geotab';
+import { Header } from './components/Header';
+import { Navigation } from './components/Navigation';
 
-const DEFAULT_POSITION: LatLngTuple = [36.1428, -78.8846];
+const DEFAULT_POSITION: LatLngTuple = [39.8283459, -98.5820546];
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 function App() {
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
   const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
 
-  const loadTags = useCallback(async (isBackground: boolean = false) => {
+  const loadTags = useCallback(async () => {
     if (!selectedSiteId) return;
     
-    try {
-      if (!isBackground) {
-        setLoading(true);
-      } else {
-        setIsBackgroundLoading(true);
-      }
-      
+    try {      
       const data = await fetchTags(selectedSiteId);
       setTags(data);
-      setError(null);
     } catch (err) {
-      setError('Failed to load assets');
       console.error(err);
-    } finally {
-      if (!isBackground) {
-        setLoading(false);
-      } else {
-        setIsBackgroundLoading(false);
-      }
     }
   }, [selectedSiteId]);
 
   useEffect(() => {
     if (authenticated && selectedSiteId) {
       loadTags();
-      const intervalId = setInterval(() => loadTags(true), REFRESH_INTERVAL);
+      const intervalId = setInterval(() => loadTags(), REFRESH_INTERVAL);
       return () => clearInterval(intervalId);
     }
   }, [authenticated, selectedSiteId, loadTags]);
 
-  const findSuperTagName = (supertagId: string | null) => {
-    if (!supertagId) return null;
-    const superTag = tags.find(tag => tag.nodeAddress === supertagId);
-    return superTag?.nodeName || null;
-  };
-
-  const findLeashedTags = (nodeAddress: string) => {
-    return tags.filter(tag => tag.sourceSupertagId === nodeAddress);
-  };
-
   const processedMarkers = useMemo(() => {
+    const findSuperTagName = (supertagId: string | null) => {
+      if (!supertagId) return null;
+      const superTag = tags.find(tag => tag.nodeAddress === supertagId);
+      return superTag?.nodeName || null;
+    };
+
+    const findLeashedTags = (nodeAddress: string) => {
+      return tags.filter(tag => tag.sourceSupertagId === nodeAddress);
+    };
+
     return tags.map(tag => {
       const temperature = tag.fahrenheit !== null && tag.fahrenheit !== undefined 
         ? Number(tag.fahrenheit) 
@@ -155,68 +139,60 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            <AssetTrackersPage
-              assets={filteredAssets}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedSiteId={selectedSiteId}
-              onSiteSelect={setSelectedSiteId}
+      <div className="min-h-screen bg-gray-50">
+        <div className="sticky top-0 z-50 bg-white shadow-sm">
+          <Header
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            showMapView={false}
+            onViewChange={() => {}}
+            selectedSiteId={selectedSiteId}
+            onSiteSelect={setSelectedSiteId}
+            showSearchInHeader={false}
+          />
+          <Navigation />
+        </div>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <AssetTrackersPage
+                  assets={filteredAssets}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                />
+              } 
             />
-          } 
-        />
-        <Route 
-          path="/sensors" 
-          element={
-            <SensorsPage
-              assets={filteredAssets}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedSiteId={selectedSiteId}
-              onSiteSelect={setSelectedSiteId}
+            <Route 
+              path="/sensors" 
+              element={
+                <SensorsPage
+                  assets={filteredAssets}
+                  searchTerm={searchTerm}
+                />
+              } 
             />
-          } 
-        />
-        <Route 
-          path="/alerts" 
-          element={
-            <AlertsPage
-              assets={filteredAssets}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedSiteId={selectedSiteId}
-              onSiteSelect={setSelectedSiteId}
+            <Route 
+              path="/alerts" 
+              element={
+                <AlertsPage assets={filteredAssets}/>
+              } 
             />
-          } 
-        />
-        <Route 
-          path="/settings" 
-          element={
-            <SettingsPage
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedSiteId={selectedSiteId}
-              onSiteSelect={setSelectedSiteId}
+            <Route 
+              path="/settings" 
+              element={
+                <SettingsPage/>
+              } 
             />
-          } 
-        />
-        <Route 
-          path="/location-history/:nodeAddress" 
-          element={
-            <LocationHistoryPage
-              assets={filteredAssets}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedSiteId={selectedSiteId}
-              onSiteSelect={setSelectedSiteId}
+            <Route 
+              path="/location-history/:nodeAddress" 
+              element={
+                <LocationHistoryPage assets={filteredAssets}/>
+              } 
             />
-          } 
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+      </div>
     </BrowserRouter>
   );
 }

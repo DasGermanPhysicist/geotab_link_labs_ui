@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { linklabs_oauth2_login } from '../lib/auth';
-import { isAuthenticated } from '../lib/auth';
 
 interface LoginScreenProps {
   onLogin: () => void;

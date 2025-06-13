@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import jsQR from 'jsqr';
-import { QrCode, X, Camera, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
+import { QrCode, X, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface QRScannerProps {
   onScan: (macAddress: string) => void;
@@ -157,6 +157,8 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
 
     startCamera();
 
+    const videoElement = videoRef.current;
+
     return () => {
       mountedRef.current = false;
       setScanning(false);
@@ -166,8 +168,8 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
       }
       
       // Clean up video element
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (videoElement) {
+        videoElement.srcObject = null;
       }
       
       // Clean up media stream
@@ -196,7 +198,7 @@ export function QRScanner({ onScan, onClose }: QRScannerProps) {
       const max = capabilities.zoom.max || 8;
       const step = capabilities.zoom.step || 0.5;
 
-      let newZoom = direction === 'in' ? 
+      const newZoom = direction === 'in' ? 
         Math.min(zoomLevel + step, max) : 
         Math.max(zoomLevel - step, min);
 
