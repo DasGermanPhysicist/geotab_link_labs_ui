@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Organization, Site, fetchOrganizations, fetchSites, fetchCurrentUserSites } from '../lib/api';
 import { Building2, MapPin, Search } from 'lucide-react';
 
@@ -17,9 +17,13 @@ export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
   const [showOrgDropdown, setShowOrgDropdown] = useState(false);
   const [hasOrgAccess, setHasOrgAccess] = useState<boolean | null>(true);
 
+  const initLoad = useCallback(async () => {
+    await getOrgs();
+  }, []);
+
   useEffect(() => {
     initLoad();
-  }, []);
+  }, [initLoad]);
   
   useEffect(() => {
     if (selectedSiteId) {
@@ -27,16 +31,6 @@ export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
       onSiteSelect(selectedSiteId);
     }
   }, [selectedSiteId, onSiteSelect]);
-
-  useEffect(() => {
-    if (selectedOrgId) {
-      getSites(selectedOrgId);
-    }
-  }, [selectedOrgId]);
-
-  const initLoad = async () => {
-    await getOrgs();
-  };
 
   const getOrgs = async () => {
     try {
@@ -71,7 +65,7 @@ export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
     }
   };
 
-  const getSites = async (orgId: string) => {
+  const getSites = useCallback(async (orgId: string) => {
     try {
       setLoading(true);
       const sites = await fetchSites(orgId);
@@ -94,7 +88,13 @@ export function OrgSiteSelector({ onSiteSelect }: OrgSiteSelectorProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedOrgId]);
+
+  useEffect(() => {
+    if (selectedOrgId) {
+      getSites(selectedOrgId);
+    }
+  }, [selectedOrgId, getSites]);
 
   const filteredOrganizations = organizations.filter(org =>
     (org.name || '').toLowerCase().includes(searchTerm.toLowerCase())

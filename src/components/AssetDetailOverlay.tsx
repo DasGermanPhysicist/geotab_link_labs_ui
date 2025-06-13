@@ -1,7 +1,7 @@
 import React from 'react';
-import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, WifiOff, Fingerprint, Barcode, Copy, Check, History } from 'lucide-react';
+import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, Fingerprint, Barcode, Copy, Check, History } from 'lucide-react';
 import type { ProcessedMarker } from '../types/assets';
-import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
+import { formatRelativeTime } from '../lib/dateUtils';
 import { TagRegistrationToken } from '../lib/api';
 import { BLEDevicesList } from './BLEDevicesList';
 import { getTemperatureDisplay } from '../lib/temperature';

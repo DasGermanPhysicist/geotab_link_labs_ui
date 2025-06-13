@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Header } from '../components/Header';
-import { Navigation } from '../components/Navigation';
 import { SensorList } from '../components/SensorList';
 import { ProcessedMarker } from '../types/assets';
 import { TagRegistrationToken } from '../lib/api';
@@ -9,19 +7,13 @@ import { Wifi, WifiOff, Clock } from 'lucide-react';
 interface SensorsPageProps {
   assets: ProcessedMarker[];
   searchTerm: string;
-  onSearchChange: (term: string) => void;
-  selectedSiteId: string;
-  onSiteSelect: (siteId: string) => void;
 }
 
 type ConnectionFilter = 'all' | 'connected' | 'disconnected' | 'inactive';
 
 export function SensorsPage({
   assets,
-  searchTerm,
-  onSearchChange,
-  selectedSiteId,
-  onSiteSelect
+  searchTerm
 }: SensorsPageProps) {
   const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>('all');
 
@@ -86,74 +78,60 @@ export function SensorsPage({
   const counts = getCounts();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-50 bg-white shadow-sm">
-        <Header
-          searchTerm={searchTerm}
-          onSearchChange={onSearchChange}
-          showMapView={false}
-          onViewChange={() => {}}
-          selectedSiteId={selectedSiteId}
-          onSiteSelect={onSiteSelect}
-          showSearchInHeader={true}
-        />
-        <Navigation />
-        
-        {/* Connection Status Filter */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-[1600px] mx-auto px-4 py-4">
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => setConnectionFilter('all')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  connectionFilter === 'all'
-                    ? 'bg-[#87B812] text-white border-[#87B812]'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                All Sensors
-                <span className="text-sm">({sensors.length})</span>
-              </button>
-              
-              <button
-                onClick={() => setConnectionFilter('connected')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  connectionFilter === 'connected'
-                    ? 'bg-green-500 text-white border-green-500'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Wifi className="w-4 h-4" />
-                Connected
-                <span className="text-sm">({counts.connected})</span>
-              </button>
-              
-              <button
-                onClick={() => setConnectionFilter('disconnected')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  connectionFilter === 'disconnected'
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <WifiOff className="w-4 h-4" />
-                Disconnected
-                <span className="text-sm">({counts.disconnected})</span>
-              </button>
-              
-              <button
-                onClick={() => setConnectionFilter('inactive')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                  connectionFilter === 'inactive'
-                    ? 'bg-red-500 text-white border-red-500'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <Clock className="w-4 h-4" />
-                Inactive (&gt;90 days)
-                <span className="text-sm">({counts.inactive})</span>
-              </button>
-            </div>
+    <>
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-[1600px] mx-auto px-4 py-4">
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => setConnectionFilter('all')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                connectionFilter === 'all'
+                  ? 'bg-[#87B812] text-white border-[#87B812]'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              All Sensors
+              <span className="text-sm">({sensors.length})</span>
+            </button>
+            
+            <button
+              onClick={() => setConnectionFilter('connected')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                connectionFilter === 'connected'
+                  ? 'bg-green-500 text-white border-green-500'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Wifi className="w-4 h-4" />
+              Connected
+              <span className="text-sm">({counts.connected})</span>
+            </button>
+            
+            <button
+              onClick={() => setConnectionFilter('disconnected')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                connectionFilter === 'disconnected'
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <WifiOff className="w-4 h-4" />
+              Disconnected
+              <span className="text-sm">({counts.disconnected})</span>
+            </button>
+            
+            <button
+              onClick={() => setConnectionFilter('inactive')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                connectionFilter === 'inactive'
+                  ? 'bg-red-500 text-white border-red-500'
+                  : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              Inactive (&gt;90 days)
+              <span className="text-sm">({counts.inactive})</span>
+            </button>
           </div>
         </div>
       </div>
@@ -164,6 +142,6 @@ export function SensorsPage({
           allAssets={assets}
         />
       </main>
-    </div>
+    </>
   );
 }

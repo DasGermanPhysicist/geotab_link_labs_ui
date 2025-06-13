@@ -1,3 +1,5 @@
+import { LatLngTuple } from "leaflet";
+
 export interface ProcessedMarker {
   name: string;
   type: string;
@@ -8,7 +10,7 @@ export interface ProcessedMarker {
   temperature: number | null;
   lastUpdate: string;
   position: LatLngTuple;
-  bleAssets: any[];
+  bleAssets: ProcessedMarker[];
   alerts?: string[];
   doorSensorStatus?: string;
   leashedToSuperTag?: string | null;

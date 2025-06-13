@@ -9,7 +9,6 @@ interface HeaderProps {
   onSearchChange: (term: string) => void;
   showMapView: boolean;
   onViewChange: (showMap: boolean) => void;
-  selectedSiteId: string;
   onSiteSelect: (siteId: string) => void;
   showSearchInHeader?: boolean;
 }
@@ -17,7 +16,6 @@ interface HeaderProps {
 export function Header({
   searchTerm,
   onSearchChange,
-  selectedSiteId,
   onSiteSelect,
   showSearchInHeader = true
 }: HeaderProps) {
