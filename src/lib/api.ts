@@ -99,6 +99,13 @@ export const TagFilterId = {
   DOOR_SENSOR_2: '39'
 } as const;
 
+export const MsgType = {
+  TEMPERATURE_1: '311',
+  TEMPERATURE_2: '312',
+  DOOR_SENSOR_1: '338',
+  DOOR_SENSOR_2: '339'
+} as const;
+
 export const TagRegistrationToken = {
   SUPERTAG: 'D29B3BE8F2CC9A1A7051',
   DOOR_SENSOR: '61697266696E64657200',
@@ -134,16 +141,16 @@ export function getTagType(
           return 'Door Sensor';
       }
       switch (msgType) {
-        case TagFilterId.TEMPERATURE_1:
+        case MsgType.TEMPERATURE_1:
           return 'Temperature Tag';
-        case TagFilterId.TEMPERATURE_2:
+        case MsgType.TEMPERATURE_2:
           return 'Temperature Tag';
-        case TagFilterId.DOOR_SENSOR_1:
+        case MsgType.DOOR_SENSOR_1:
           return 'Door Sensor';
-        case TagFilterId.DOOR_SENSOR_2:
+        case MsgType.DOOR_SENSOR_2:
           return 'Door Sensor';
       }
-      return 'Door Sensor';
+      return 'BLE Tag';
     case TagRegistrationToken.TEMPERATURE:
       return 'Temperature Tag';
     default:
