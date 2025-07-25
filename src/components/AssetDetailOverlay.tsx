@@ -1,8 +1,8 @@
 import React from 'react';
-import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, WifiOff, Fingerprint, Barcode, Copy, Check, History } from 'lucide-react';
+import { ChevronDown, ChevronUp, Battery, Thermometer, Clock, DoorOpen, Wifi, Fingerprint, Barcode, Copy, Check, History } from 'lucide-react';
 import type { ProcessedMarker } from '../types/assets';
-import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
-import { TagTypes } from '../lib/api';
+import { formatRelativeTime } from '../lib/dateUtils';
+import { TagRegistrationToken } from '../lib/api';
 import { BLEDevicesList } from './BLEDevicesList';
 import { getTemperatureDisplay } from '../lib/temperature';
 import { useNavigate } from 'react-router-dom';
@@ -175,8 +175,8 @@ export function AssetDetailOverlay({
               </div>
             </div>
 
-            {(asset.registrationToken === TagTypes.TEMPERATURE || 
-              asset.registrationToken === TagTypes.SUPERTAG) && (
+            {(asset.registrationToken === TagRegistrationToken.TEMPERATURE || 
+              asset.registrationToken === TagRegistrationToken.SUPERTAG) && (
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Thermometer className={`w-5 h-5 ${
@@ -194,7 +194,7 @@ export function AssetDetailOverlay({
           </div>
 
           {/* Door sensor status */}
-          {asset.registrationToken === TagTypes.DOOR_SENSOR && (
+          {asset.registrationToken === TagRegistrationToken.DOOR_SENSOR && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <DoorOpen className={`w-5 h-5 ${
@@ -222,7 +222,7 @@ export function AssetDetailOverlay({
           )}
 
           {/* Connected BLE devices */}
-          {asset.registrationToken === TagTypes.SUPERTAG && asset.bleAssets.length > 0 && (
+          {asset.registrationToken === TagRegistrationToken.SUPERTAG && asset.bleAssets.length > 0 && (
             <BLEDevicesList devices={asset.bleAssets} />
           )}
 

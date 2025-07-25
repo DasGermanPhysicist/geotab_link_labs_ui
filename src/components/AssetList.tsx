@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Wifi, WifiOff, Box } from 'lucide-react';
-import { TagTypes } from '../lib/api';
+import { ArrowDownUp, AlertTriangle, Battery, Clock, DoorOpen, Thermometer, Box } from 'lucide-react';
+import { TagName, TagRegistrationToken } from '../lib/api';
 import type { ProcessedMarker } from '../types/assets';
 import { formatLocalDateTime, formatRelativeTime } from '../lib/dateUtils';
 import { getTemperatureDisplay } from '../lib/temperature';
@@ -61,10 +61,10 @@ export function AssetList({
   // Filter assets based on view type
   const filteredAssets = sortedAssets.filter(asset => {
     if (assetViewType === 'supertags') {
-      return asset.registrationToken === TagTypes.SUPERTAG;
+      return asset.registrationToken === TagRegistrationToken.SUPERTAG;
     }
     if (assetViewType === 'sensors') {
-      return asset.registrationToken !== TagTypes.SUPERTAG;
+      return asset.registrationToken !== TagRegistrationToken.SUPERTAG;
     }
     return true;
   });
@@ -72,8 +72,8 @@ export function AssetList({
   // Get counts for each type
   const counts = {
     all: assets.length,
-    supertags: assets.filter(a => a.registrationToken === TagTypes.SUPERTAG).length,
-    sensors: assets.filter(a => a.registrationToken !== TagTypes.SUPERTAG).length
+    supertags: assets.filter(a => a.registrationToken === TagRegistrationToken.SUPERTAG).length,
+    sensors: assets.filter(a => a.registrationToken !== TagRegistrationToken.SUPERTAG).length
   };
 
   return (
@@ -237,9 +237,9 @@ export function AssetList({
                       )}
                     </div>
                   </div>
-                  {(asset.registrationToken === TagTypes.TEMPERATURE || 
-                    asset.registrationToken === TagTypes.SUPERTAG) && asset.temperature !== null && (
-                    <div className="flex items-center gap-1.5">
+                  {(asset.type === TagName.TEMPERATURE || 
+                    asset.type === TagName.SUPERTAG) && asset.temperature !== null && (
+                    <div className="ml-auto flex items-center gap-1.5">
                       <Thermometer className={`w-4 h-4 ${
                         asset.temperature >= 80 ? 'text-red-500' :
                         asset.temperature >= 70 ? 'text-orange-500' : 
@@ -250,18 +250,17 @@ export function AssetList({
                       </span>
                     </div>
                   )}
+                  {asset.type === TagName.DOOR_SENSOR && (
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <DoorOpen className={`w-4 h-4 ${
+                        asset.doorSensorStatus === 'OPEN' ? 'text-red-500' : 'text-green-500'
+                      }`} />
+                      <span className="text-sm">{asset.doorSensorStatus || 'Unknown'}</span>
+                    </div>
+                  )}
                 </div>
 
-                {asset.registrationToken === TagTypes.DOOR_SENSOR && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <DoorOpen className={`w-4 h-4 ${
-                      asset.doorSensorStatus === 'OPEN' ? 'text-red-500' : 'text-green-500'
-                    }`} />
-                    <span className="text-sm">{asset.doorSensorStatus || 'Unknown'}</span>
-                  </div>
-                )}
-
-                {asset.registrationToken === TagTypes.SUPERTAG && asset.bleAssets.length > 0 && (
+                {asset.type === TagName.SUPERTAG && asset.bleAssets.length > 0 && (
                   <div className="mt-2 text-sm text-gray-600">
                     Leashed BLE Assets: {asset.bleAssets.filter(a => {
                       const lastEventTime = new Date(a.lastEventTime).getTime();
@@ -271,7 +270,7 @@ export function AssetList({
                   </div>
                 )}
 
-                {asset.registrationToken !== TagTypes.SUPERTAG && asset.leashedToSuperTag && (
+                {asset.type !== TagName.SUPERTAG && asset.leashedToSuperTag && (
                   <div className="mt-2 text-sm text-gray-600">
                     Connected to: {asset.leashedToSuperTag}
                   </div>

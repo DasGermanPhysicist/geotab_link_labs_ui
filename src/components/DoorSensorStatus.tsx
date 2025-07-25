@@ -1,6 +1,6 @@
 import React from 'react';
 import { DoorOpen } from 'lucide-react';
-import { TagTypes } from '../lib/api';
+import { TagRegistrationToken } from '../lib/api';
 
 interface DoorSensorStatusProps {
   assets: Array<{
@@ -11,7 +11,7 @@ interface DoorSensorStatusProps {
 
 export function DoorSensorStatus({ assets }: DoorSensorStatusProps) {
   const doorSensors = assets.filter(asset => 
-    asset.registrationToken === TagTypes.DOOR_SENSOR
+    asset.registrationToken === TagRegistrationToken.DOOR_SENSOR
   );
 
   const statusCounts = doorSensors.reduce((acc, sensor) => {
@@ -21,10 +21,13 @@ export function DoorSensorStatus({ assets }: DoorSensorStatusProps) {
   }, { OPEN: 0, CLOSED: 0, UNKNOWN: 0 } as Record<string, number>);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="bg-white rounded-lg shadow-sm px-4 py-3">
       <div className="flex items-center gap-3 mb-4">
         <DoorOpen className="w-6 h-6 text-[#004780]" />
         <h3 className="font-semibold text-lg">Door Sensor Status</h3>
+        <div className="text-sm text-gray-500 ml-auto">
+          Total Door Sensors: {doorSensors.length}
+        </div>
       </div>
 
       <div className="ll-grid grid-cols-2 gap-4">
@@ -48,12 +51,6 @@ export function DoorSensorStatus({ assets }: DoorSensorStatusProps) {
           Unknown status: {statusCounts.UNKNOWN} sensors
         </div>
       )}
-
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <div className="text-sm text-gray-500">
-          Total Door Sensors: {doorSensors.length}
-        </div>
-      </div>
     </div>
   );
 }

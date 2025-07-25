@@ -21,7 +21,7 @@ export function Dashboard({ selectedAsset, markers, mapConfig, onAssetSelect }: 
   const markersToDisplay = selectedAsset ? [selectedAsset] : markers;
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-6">
+    <div className="w-8/10 mx-auto space-y-6">
       <div className="bg-white rounded-lg shadow-sm p-4 h-[400px]">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-semibold">Asset Location Map</h2>
@@ -34,7 +34,7 @@ export function Dashboard({ selectedAsset, markers, mapConfig, onAssetSelect }: 
             </button>
           )}
         </div>
-        <div className="h-full rounded-lg border border-gray-200">
+        <div className="h-[calc(100%-44px)] rounded-lg border border-gray-200">
           <Map 
             center={mapConfig.center}
             zoom={mapConfig.zoom}

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { subDays } from 'date-fns';
-import { History, Calendar, Search, Loader2, ArrowLeft, MapPin, Clock } from 'lucide-react';
+import { History, Calendar, Loader2, ArrowLeft, Clock } from 'lucide-react';
 import { fetchLocationHistory, LocationHistoryEntry } from '../lib/api';
 import LocationHistoryMap from './LocationHistoryMap';
 import LocationHistoryTimeline from './LocationHistoryTimeline';
@@ -33,7 +33,7 @@ const LocationHistory: React.FC<LocationHistoryProps> = ({
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
 
   // Function to load history data
-  const loadHistoryData = async () => {
+  const loadHistoryData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -46,12 +46,12 @@ const LocationHistory: React.FC<LocationHistoryProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [nodeAddress, startDate, endDate]);
   
   // Load data on component mount and when date range changes
   useEffect(() => {
     loadHistoryData();
-  }, [nodeAddress, startDate, endDate]);
+  }, [loadHistoryData]);
   
   // Handle date range change (last 24h, 7d, 30d)
   const handleDateRangeChange = (days: number) => {

@@ -4,7 +4,7 @@ import { GeotabAPI, GeotabSession, GeotabLifecycleMethods, CallbackFunction } fr
 
 async function ensure_linklabs_authorization(geotabAPI: GeotabAPI, addInReady: CallbackFunction) {
     const callAddInReady = () => {
-        if (!!addInReady) {
+        if (addInReady) {
             // console.log("Calling Add-In Ready...")
             addInReady()
         }
@@ -52,13 +52,13 @@ export const GeotabLifecycle = (): GeotabLifecycleMethods => {
             // addInReady();
         },
 
-        focus(_api, _state) {
+        focus(/* _api, _state */) {
             // console.log("Geotab Focus Lifecycle: Airfinder Add-In");
             // ensure_conductor_authorization(api);
             // TODO: ensure token is still valid?
         },
         
-        blur(_api, _state) {
+        blur(/* _api, _state */) {
             // console.log("Geotab Blur Lifecycle: Airfinder Add-In");
             // console.dir(api, { depth: null, colors: true });
             // console.dir(state, { depth: null, colors: true });
