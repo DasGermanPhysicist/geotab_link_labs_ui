@@ -235,7 +235,7 @@ export async function fetchSites(organizationId: string): Promise<Site[]> {
   }
 }
 
-export async function fetchTags(siteId: string): Promise<Tag[]> {
+export async function fetchTags(siteId: string, includeGeotabInfo: boolean = false): Promise<Tag[]> {
   try {
     const params = new URLSearchParams({
       siteId,
@@ -243,9 +243,12 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
       page: '1',
       sortBy: 'nodeName',
       sort: 'asc',
-      all: 'true',
-      includeGeotabInfo: 'true'
+      all: 'true'
     });
+
+    if (includeGeotabInfo) {
+      params.append('includeGeotabInfo', 'true');
+    }
 
     const response = await network_asset_api.get(`/networkAsset/airfinder/v4/tags?${params}`);
     return (response.data ?? []).map((tag: Tag) => ({
@@ -259,6 +262,8 @@ export async function fetchTags(siteId: string): Promise<Tag[]> {
     throw error;
   }
 }
+
+// WRITE NEW API CALL TO GET THE GEOTAB SERIAL NUMBER
 
 export async function fetchLocationHistory(
   nodeAddress: string, 

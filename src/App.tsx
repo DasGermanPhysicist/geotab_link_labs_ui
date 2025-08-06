@@ -20,15 +20,22 @@ const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 function App() {
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
   const [tags, setTags] = useState<Tag[]>([]);
+  const [geotabInfo, setGeotabInfo] = useState<Tag[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Load tag data
   const loadTags = useCallback(async () => {
     if (!selectedSiteId) return;
     
-    try {      
-      const data = await fetchTags(selectedSiteId);
-      setTags(data);
+    try {
+      // Get tag info minus Geotab Info
+      const tagData = await fetchTags(selectedSiteId);
+
+      // Get tag info including Geotab Info
+      const geotabTagData = await fetchTags(selectedSiteId, true);
+      setTags(tagData);
+      setGeotabInfo(geotabTagData);
     } catch (err) {
       console.error(err);
     }
@@ -53,6 +60,12 @@ function App() {
       return tags.filter(tag => tag.sourceSupertagId === nodeAddress);
     };
 
+    // Find a tag's corresponding geotab info
+    const findGeotabTag = (nodeAddress: string) => {
+      const geotabTag = geotabInfo.find(tag => tag.nodeAddress === nodeAddress);
+      return geotabTag ?? undefined;
+    };
+
     return tags.map(tag => {
       const temperature = tag.fahrenheit !== null && tag.fahrenheit !== undefined 
         ? Number(tag.fahrenheit) 
@@ -63,7 +76,7 @@ function App() {
           ? [Number(tag.latitude), Number(tag.longitude)] as LatLngTuple
           : DEFAULT_POSITION,
         name: tag.nodeName || 'Unnamed Asset',
-        type: getTagType(tag.registrationToken, tag.geotabSerialNumber, tag.hwId, tag.filterId, tag.msgType),
+        type: getTagType(tag.registrationToken, findGeotabTag(tag.nodeAddress)?.geotabSerialNumber, tag.hwId, tag.filterId, tag.msgType),
         temperature,
         battery: getBatteryInfo(tag),
         lastUpdate: tag.lastEventTime || new Date().toISOString(),
@@ -76,13 +89,13 @@ function App() {
         registrationToken: tag.registrationToken,
         chargeState: tag.chargeState,
         batteryCapacity_mAh: tag.batteryCapacity_mAh,
-        geotabSerialNumber: tag.geotabSerialNumber,
+        geotabSerialNumber: findGeotabTag(tag.nodeAddress)?.geotabSerialNumber,
         hwId: tag.hwId,
         filterId: tag.filterId,
         msgType: tag.msgType
       };
     });
-  }, [tags]);
+  }, [tags, geotabInfo]);
 
   // Filter assets based on searchTerm
   const filteredAssets = useMemo(() => {

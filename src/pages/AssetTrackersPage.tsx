@@ -46,7 +46,7 @@ export function AssetTrackersPage({
   };
 
   const mapConfig = {
-    center: selectedAsset ? selectedAsset.position : assets[0]?.position || [39.8283459, -98.5820546],
+    center: selectedAsset ? selectedAsset.position : assets[0]?.position ?? [39.8283459, -98.5820546],
     zoom: selectedAsset ? 15 : 13
   };
 
