@@ -6,6 +6,7 @@ import { TagRegistrationToken } from '../lib/api';
 import { BLEDevicesList } from './BLEDevicesList';
 import { getTemperatureDisplay } from '../lib/temperature';
 import { useNavigate } from 'react-router-dom';
+import { SuperTagConfiguration } from './SuperTagConfiguration';
 
 interface AssetDetailOverlayProps {
   asset: ProcessedMarker;
@@ -96,6 +97,9 @@ export function AssetDetailOverlay({
             <History className="w-5 h-5" />
             <span>View Location History</span>
           </button>
+          
+          {/* SuperTag Configuration Card */}
+          <SuperTagConfiguration asset={asset} />
           
           {/* Asset Identifiers */}
           <div className="bg-gray-50 p-4 rounded-lg space-y-4">

@@ -48,6 +48,19 @@ export interface Tag {
   hwId?: string;
   filterId?: string;
   msgType?: string;
+  // SuperTag Configuration Properties (correct API property names)
+  stModeLocUpdateRate_Moving?: string | number;
+  stModeLocUpdateRate_Stationary?: string | number;
+  sendOnStopWaitTime_s?: string | number;
+  gpsOrder?: string | number;
+  wifiOrder?: string | number;
+  cellOrder?: string | number;
+  activeProfile?: string;
+  positionSource?: string;
+  motionSenseEnable0?: string;
+  motionSenseThreshold0?: string | number;
+  motionSenseDuration0?: string | number;
+  stModeHeartbeatInterval?: string | number;
 }
 
 export interface BatteryInfo {

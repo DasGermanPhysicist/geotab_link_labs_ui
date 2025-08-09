@@ -5,6 +5,7 @@ import { AssetList } from '../components/AssetList';
 import { AssetDetailOverlay } from '../components/AssetDetailOverlay';
 import { Dashboard } from '../components/Dashboard';
 import { QRScanner } from '../components/QRScanner';
+import { SuperTagConfiguration } from '../components/SuperTagConfiguration';
 import { ProcessedMarker } from '../types/assets';
 import { QrCode, ArrowLeft, History } from 'lucide-react';
 
@@ -86,6 +87,13 @@ export function AssetTrackersPage({
             mapConfig={mapConfig}
             onAssetSelect={handleAssetSelect}
           />
+          
+          {/* SuperTag Configuration (Desktop) */}
+          {selectedAsset && (
+            <div className="mt-6">
+              <SuperTagConfiguration asset={selectedAsset} />
+            </div>
+          )}
           
           {/* Location History Button (Desktop) */}
           {selectedAsset && (
