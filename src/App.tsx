@@ -92,20 +92,7 @@ function App() {
         geotabSerialNumber: findGeotabTag(tag.nodeAddress)?.geotabSerialNumber,
         hwId: tag.hwId,
         filterId: tag.filterId,
-        msgType: tag.msgType,
-        // SuperTag Configuration Properties (pass through from API)
-        stModeLocUpdateRate_Moving: tag.stModeLocUpdateRate_Moving,
-        stModeLocUpdateRate_Stationary: tag.stModeLocUpdateRate_Stationary,
-        sendOnStopWaitTime_s: tag.sendOnStopWaitTime_s,
-        gpsOrder: tag.gpsOrder,
-        wifiOrder: tag.wifiOrder,
-        cellOrder: tag.cellOrder,
-        activeProfile: tag.activeProfile,
-        positionSource: tag.positionSource,
-        motionSenseEnable0: tag.motionSenseEnable0,
-        motionSenseThreshold0: tag.motionSenseThreshold0,
-        motionSenseDuration0: tag.motionSenseDuration0,
-        stModeHeartbeatInterval: tag.stModeHeartbeatInterval
+        msgType: tag.msgType
       };
     });
   }, [tags, geotabInfo]);

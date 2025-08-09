@@ -295,6 +295,46 @@ export async function fetchLocationHistory(
   }
 }
 
+export interface SuperTagConfig {
+  stModeLocUpdateRate_Moving?: string;
+  stModeLocUpdateRate_Stationary?: string;
+  stModeHeartbeatInterval?: string;
+  sendOnStopWaitTime_s?: string;
+  gpsOrder?: string;
+  wifiOrder?: string;
+  cellOrder?: string;
+  activeProfile?: string;
+  positionSource?: string;
+}
+
+export async function fetchSuperTagConfig(nodeAddress: string): Promise<SuperTagConfig | null> {
+  try {
+    const response = await network_asset_api.get(`/networkAsset/module/${nodeAddress}`);
+    const props = response.data?.assetInfo?.metadata?.props;
+    
+    if (!props) {
+      return null;
+    }
+
+    return {
+      stModeLocUpdateRate_Moving: props.stModeLocUpdateRate_Moving,
+      stModeLocUpdateRate_Stationary: props.stModeLocUpdateRate_Stationary,
+      stModeHeartbeatInterval: props.stModeHeartbeatInterval,
+      sendOnStopWaitTime_s: props.sendOnStopWaitTime_s,
+      gpsOrder: props.gpsOrder,
+      wifiOrder: props.wifiOrder,
+      cellOrder: props.cellOrder,
+      activeProfile: props.activeProfile,
+      positionSource: props.positionSource,
+    };
+  } catch (error) {
+    console.error('Failed to fetch SuperTag config:', {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+    return null;
+  }
+}
+
 export function getBatteryInfo(tag: Tag): BatteryInfo {
   const batteryStatusNum = Number(tag.batteryStatus);
   

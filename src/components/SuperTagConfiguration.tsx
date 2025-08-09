@@ -1,34 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Settings, MapPin, Clock, Navigation } from 'lucide-react';
-import { TagRegistrationToken } from '../lib/api';
+import { TagRegistrationToken, fetchSuperTagConfig, SuperTagConfig } from '../lib/api';
 
 interface SuperTagConfigurationProps {
   asset: {
     registrationToken: string;
     name: string;
     nodeAddress: string;
-    // SuperTag configuration properties with correct API names
-    stModeLocUpdateRate_Moving?: string | number;
-    stModeLocUpdateRate_Stationary?: string | number;
-    sendOnStopWaitTime_s?: string | number;
-    gpsOrder?: string | number;
-    wifiOrder?: string | number;
-    cellOrder?: string | number;
-    activeProfile?: string;
-    positionSource?: string;
-    motionSenseEnable0?: string;
-    motionSenseThreshold0?: string | number;
-    motionSenseDuration0?: string | number;
   };
 }
 
 export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [config, setConfig] = useState<SuperTagConfig | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Only show for SuperTags
   if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
     return null;
   }
+
+  // Fetch config when component mounts or asset changes
+  useEffect(() => {
+    const loadConfig = async () => {
+      if (!asset.nodeAddress) return;
+      
+      setLoading(true);
+      try {
+        const configData = await fetchSuperTagConfig(asset.nodeAddress);
+        setConfig(configData);
+      } catch (error) {
+        console.error('Failed to load SuperTag configuration:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadConfig();
+  }, [asset.nodeAddress]);
 
   // Helper function to format time values
   const formatTimeValue = (value?: string | number, unit: string = 'seconds'): string => {
@@ -54,9 +63,11 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
 
   // Parse GPS/WiFi/CellID order based on the three separate order values
   const parseLocationOrder = (): string => {
-    const gps = Number(asset.gpsOrder) || 0;
-    const wifi = Number(asset.wifiOrder) || 0; 
-    const cell = Number(asset.cellOrder) || 0;
+    if (!config) return 'Loading...';
+    
+    const gps = Number(config.gpsOrder) || 0;
+    const wifi = Number(config.wifiOrder) || 0; 
+    const cell = Number(config.cellOrder) || 0;
     
     // Create array of [source, order] pairs, filter out disabled (0), and sort by order
     const sources = [
@@ -74,10 +85,31 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
     return sources.map(([source]) => source).join(' → ');
   };
 
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 mb-6 overflow-hidden">
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-gray-500">Loading SuperTag configuration...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!config) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 mb-6 overflow-hidden">
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-gray-500">Unable to load SuperTag configuration</div>
+        </div>
+      </div>
+    );
+  }
+
   // Get the most important configuration values
-  const locationUpdateRateMoving = formatTimeValue(asset.stModeLocUpdateRate_Moving);
-  const locationUpdateRateStationary = formatTimeValue(asset.stModeLocUpdateRate_Stationary);
-  const heartbeatInterval = formatTimeValue(asset.stModeHeartbeatInterval);
+  const locationUpdateRateMoving = formatTimeValue(config.stModeLocUpdateRate_Moving);
+  const locationUpdateRateStationary = formatTimeValue(config.stModeLocUpdateRate_Stationary);
+  const heartbeatInterval = formatTimeValue(config.stModeHeartbeatInterval);
+  const sendOnStopWaitTime = formatTimeValue(config.sendOnStopWaitTime_s);
   const locationOrder = parseLocationOrder();
 
   return (
@@ -138,7 +170,7 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
               <span className="text-sm font-medium text-gray-600">Send on Stop Wait Time</span>
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              {formatTimeValue(asset.sendOnStopWaitTime_s)}
+              {sendOnStopWaitTime}
             </div>
           </div>
           {/* Location Source Priority */}
@@ -151,32 +183,11 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
               {locationOrder}
             </div>
             <div className="text-sm text-blue-600 mt-2">
-              GPS Order: {asset.gpsOrder === 0 || asset.gpsOrder === '0' ? 'Disabled' : asset.gpsOrder || 'Not set'} | 
-              WiFi Order: {asset.wifiOrder === 0 || asset.wifiOrder === '0' ? 'Disabled' : asset.wifiOrder || 'Not set'} | 
-              CellID Order: {asset.cellOrder === 0 || asset.cellOrder === '0' ? 'Disabled' : asset.cellOrder || 'Not set'}
+              GPS Order: {config.gpsOrder === '0' ? 'Disabled' : config.gpsOrder || 'Not set'} | 
+              WiFi Order: {config.wifiOrder === '0' ? 'Disabled' : config.wifiOrder || 'Not set'} | 
+              CellID Order: {config.cellOrder === '0' ? 'Disabled' : config.cellOrder || 'Not set'}
             </div>
           </div>
-
-          {/* Motion Sensing Configuration */}
-          {asset.motionSenseEnable0 === '1' && (
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-medium text-yellow-800 mb-2">Motion Sensing Configuration</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-yellow-700">Threshold:</span>
-                  <span className="font-mono text-yellow-800">
-                    {asset.motionSenseThreshold0 === 0 || asset.motionSenseThreshold0 === '0' ? 'Disabled' : asset.motionSenseThreshold0 || 'Default'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-yellow-700">Duration:</span>
-                  <span className="font-mono text-yellow-800">
-                    {formatTimeValue(asset.motionSenseDuration0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Configuration Note */}
           <div className="text-xs text-gray-500 italic">
