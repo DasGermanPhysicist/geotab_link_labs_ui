@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Settings, MapPin, Clock, Navigation } from 'lucide-react';
+import { ChevronDown, ChevronRight, Settings, MapPin, Clock, Navigation, HelpCircle } from 'lucide-react';
 import { TagRegistrationToken, fetchSuperTagConfig, SuperTagConfig } from '../lib/api';
 
 interface SuperTagConfigurationProps {
@@ -8,6 +8,23 @@ interface SuperTagConfigurationProps {
     name: string;
     nodeAddress: string;
   };
+}
+
+interface TooltipProps {
+  children: React.ReactNode;
+  content: string;
+}
+
+function Tooltip({ children, content }: TooltipProps) {
+  return (
+    <div className="relative group inline-block">
+      {children}
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none max-w-sm w-64 z-[9999] shadow-lg">
+        <div className="text-left leading-relaxed">{content}</div>
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800 z-[9999]"></div>
+      </div>
+    </div>
+  );
 }
 
 export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
@@ -113,7 +130,7 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
   const locationOrder = parseLocationOrder();
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mb-6 overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-200 mb-6">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -135,9 +152,12 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Location Update Rates */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 group">
                 <MapPin className="w-5 h-5 text-[#87B812]" />
-                <span className="text-sm font-medium text-gray-600">ST Mode Location Update Rates</span>
+                <span className="text-sm font-medium text-gray-600">ST Mode Location Update Intervals</span>
+                <Tooltip content="The SuperTag sleeps most of the time to save battery. When it starts moving, it finds its location right away. While moving, it checks location at the moving time. When sitting still, it checks location at the stationary time.">
+                  <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                </Tooltip>
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
@@ -156,6 +176,9 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-5 h-5 text-[#004780]" />
                 <span className="text-sm font-medium text-gray-600">ST Mode Heartbeat Interval</span>
+                <Tooltip content="The SuperTag sends a health check message at this time. This message tells us the SuperTag is working but doesn't include location to save battery.">
+                  <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                </Tooltip>
               </div>
               <div className="text-2xl font-bold text-gray-900">
                 {heartbeatInterval}
@@ -168,6 +191,9 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-[#87B812]" />
               <span className="text-sm font-medium text-gray-600">Send on Stop Wait Time</span>
+              <Tooltip content="After moving for this amount of time and then stopping, the SuperTag will try to find its location. This helps us know where the SuperTag ended up.">
+                <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+              </Tooltip>
             </div>
             <div className="text-2xl font-bold text-gray-900">
               {sendOnStopWaitTime}
@@ -178,6 +204,9 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
             <h3 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
               <Navigation className="w-5 h-5" />
               Location Priority Order
+              <Tooltip content="The SuperTag has different ways to find its location. This shows the order it tries each way. It stops when one works. GPS works best in open areas but uses more battery. WiFi works well in cities and saves battery.">
+                <HelpCircle className="w-4 h-4 text-blue-600 hover:text-blue-800 cursor-help" />
+              </Tooltip>
             </h3>
             <div className="text-lg font-semibold text-blue-800">
               {locationOrder}
