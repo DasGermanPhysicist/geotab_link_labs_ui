@@ -32,29 +32,30 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
   const [config, setConfig] = useState<SuperTagConfig | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Fetch config when component mounts or asset changes
+  useEffect(() => {
+    // Only fetch config for SuperTags
+    if (asset.registrationToken === TagRegistrationToken.SUPERTAG && asset.nodeAddress) {
+      const loadConfig = async () => {
+        setLoading(true);
+        try {
+          const configData = await fetchSuperTagConfig(asset.nodeAddress);
+          setConfig(configData);
+        } catch (error) {
+          console.error('Failed to load SuperTag configuration:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadConfig();
+    }
+  }, [asset.nodeAddress]);
+
   // Only show for SuperTags
   if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
     return null;
   }
-
-  // Fetch config when component mounts or asset changes
-  useEffect(() => {
-    const loadConfig = async () => {
-      if (!asset.nodeAddress) return;
-      
-      setLoading(true);
-      try {
-        const configData = await fetchSuperTagConfig(asset.nodeAddress);
-        setConfig(configData);
-      } catch (error) {
-        console.error('Failed to load SuperTag configuration:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConfig();
-  }, [asset.nodeAddress]);
 
   // Helper function to format time values
   const formatTimeValue = (value?: string | number, unit: string = 'seconds'): string => {
