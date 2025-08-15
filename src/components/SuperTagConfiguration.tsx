@@ -116,22 +116,28 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
 
   // Fetch config when component mounts or asset changes
   useEffect(() => {
-    const loadConfig = async () => {
-      if (!asset.nodeAddress) return;
-      
-      setLoading(true);
-      try {
-        const configData = await fetchSuperTagConfig(asset.nodeAddress);
-        setConfig(configData);
-      } catch (error) {
-        console.error('Failed to load SuperTag configuration:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Only fetch config for SuperTags
+    if (asset.registrationToken === TagRegistrationToken.SUPERTAG && asset.nodeAddress) {
+      const loadConfig = async () => {
+        setLoading(true);
+        try {
+          const configData = await fetchSuperTagConfig(asset.nodeAddress);
+          setConfig(configData);
+        } catch (error) {
+          console.error('Failed to load SuperTag configuration:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    loadConfig();
+      loadConfig();
+    }
   }, [asset.nodeAddress]);
+
+  // Only show for SuperTags
+  if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
+    return null;
+  }
 
   // Only show for SuperTags
   if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
