@@ -80,7 +80,7 @@ export function AssetTrackersPage({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 h-full overflow-y-auto p-6">
           <Dashboard 
             selectedAsset={selectedAsset}
             markers={assets}
@@ -92,19 +92,6 @@ export function AssetTrackersPage({
           {selectedAsset && (
             <div className="mt-6">
               <SuperTagConfiguration asset={selectedAsset} />
-            </div>
-          )}
-          
-          {/* Location History Button (Desktop) */}
-          {selectedAsset && (
-            <div className="mt-6">
-              <button
-                onClick={handleViewLocationHistory}
-                className="flex items-center gap-2 px-4 py-2 bg-[#87B812] text-white rounded-lg hover:bg-[#769f10] transition-colors"
-              >
-                <History className="w-5 h-5" />
-                <span>View Location History</span>
-              </button>
             </div>
           )}
         </div>

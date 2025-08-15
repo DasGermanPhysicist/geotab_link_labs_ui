@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, Settings, MapPin, Clock, Navigation, HelpCircle } from 'lucide-react';
 import { TagRegistrationToken, fetchSuperTagConfig, SuperTagConfig } from '../lib/api';
 
@@ -16,12 +16,94 @@ interface TooltipProps {
 }
 
 function Tooltip({ children, content }: TooltipProps) {
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [arrowStyle, setArrowStyle] = useState<React.CSSProperties>({});
+  const [isPositioned, setIsPositioned] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateTooltipPosition = () => {
+      if (!tooltipRef.current || !containerRef.current) return;
+
+      const container = containerRef.current;
+      const containerRect = container.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate available space
+      const spaceLeft = containerRect.left;
+      const spaceRight = viewportWidth - containerRect.right;
+      
+      // Determine optimal width (max 256px, but constrain to available space)
+      const maxWidth = Math.min(256, viewportWidth - 32); // 32px total margin
+      
+      let newTooltipStyle: React.CSSProperties = {
+        width: `${maxWidth}px`,
+        bottom: '100%',
+        marginBottom: '8px'
+      };
+      
+      let newArrowStyle: React.CSSProperties = {
+        top: '100%',
+        borderLeft: '4px solid transparent',
+        borderRight: '4px solid transparent', 
+        borderTop: '4px solid #1f2937'
+      };
+
+      // Determine horizontal position
+      if (spaceRight < maxWidth / 2 + 8) {
+        // Not enough space on right, align to right edge
+        newTooltipStyle.right = 0;
+        newArrowStyle.right = '16px';
+      } else if (spaceLeft < maxWidth / 2 + 8) {
+        // Not enough space on left, align to left edge  
+        newTooltipStyle.left = 0;
+        newArrowStyle.left = '16px';
+      } else {
+        // Enough space on both sides, center it
+        newTooltipStyle.left = '50%';
+        newTooltipStyle.transform = 'translateX(-50%)';
+        newArrowStyle.left = '50%';
+        newArrowStyle.transform = 'translateX(-50%)';
+      }
+      
+      setTooltipStyle(newTooltipStyle);
+      setArrowStyle(newArrowStyle);
+      setIsPositioned(true); // Mark as positioned and ready to show
+    };
+
+    const handleMouseEnter = () => {
+      setIsPositioned(false); // Hide while calculating
+      updateTooltipPosition();
+    };
+
+    const handleMouseLeave = () => {
+      setIsPositioned(false); // Reset for next hover
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mouseenter', handleMouseEnter);
+      container.addEventListener('mouseleave', handleMouseLeave);
+      return () => {
+        container.removeEventListener('mouseenter', handleMouseEnter);
+        container.removeEventListener('mouseleave', handleMouseLeave);
+      };
+    }
+  }, []);
+
   return (
-    <div className="relative group inline-block">
+    <div ref={containerRef} className="relative group inline-block">
       {children}
-      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none max-w-sm w-64 z-[9999] shadow-lg">
+      <div 
+        ref={tooltipRef}
+        className={`absolute px-4 py-3 bg-gray-800 text-white text-sm rounded-lg transition-opacity duration-200 pointer-events-none z-[99999] shadow-lg ${
+          isPositioned ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+        }`}
+        style={tooltipStyle}
+      >
         <div className="text-left leading-relaxed">{content}</div>
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800 z-[9999]"></div>
+        <div className="absolute z-[99999]" style={arrowStyle}></div>
       </div>
     </div>
   );
@@ -31,11 +113,6 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [config, setConfig] = useState<SuperTagConfig | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Only show for SuperTags
-  if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
-    return null;
-  }
 
   // Fetch config when component mounts or asset changes
   useEffect(() => {
@@ -55,6 +132,11 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
 
     loadConfig();
   }, [asset.nodeAddress]);
+
+  // Only show for SuperTags
+  if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
+    return null;
+  }
 
   // Helper function to format time values
   const formatTimeValue = (value?: string | number, unit: string = 'seconds'): string => {
