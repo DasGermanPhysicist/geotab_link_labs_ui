@@ -139,11 +139,6 @@ export function SuperTagConfiguration({ asset }: SuperTagConfigurationProps) {
     return null;
   }
 
-  // Only show for SuperTags
-  if (asset.registrationToken !== TagRegistrationToken.SUPERTAG) {
-    return null;
-  }
-
   // Helper function to format time values
   const formatTimeValue = (value?: string | number, unit: string = 'seconds'): string => {
     if (!value || value === 0 || value === '0') return 'Disabled';
