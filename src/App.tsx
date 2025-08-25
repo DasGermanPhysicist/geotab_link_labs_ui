@@ -29,6 +29,7 @@ function App() {
     if (!selectedSiteId) return;
     
     try {
+      // Two seperate NA API calls because of issue NEX-8897; revert after issue is fixed
       // Get tag info minus Geotab Info
       const tagData = await fetchTags(selectedSiteId);
 

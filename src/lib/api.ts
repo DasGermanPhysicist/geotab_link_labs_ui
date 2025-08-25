@@ -48,6 +48,19 @@ export interface Tag {
   hwId?: string;
   filterId?: string;
   msgType?: string;
+  // SuperTag Configuration Properties (correct API property names)
+  stModeLocUpdateRate_Moving?: string | number;
+  stModeLocUpdateRate_Stationary?: string | number;
+  sendOnStopWaitTime_s?: string | number;
+  gpsOrder?: string | number;
+  wifiOrder?: string | number;
+  cellOrder?: string | number;
+  activeProfile?: string;
+  positionSource?: string;
+  motionSenseEnable0?: string;
+  motionSenseThreshold0?: string | number;
+  motionSenseDuration0?: string | number;
+  stModeHeartbeatInterval?: string | number;
 }
 
 export interface BatteryInfo {
@@ -235,6 +248,7 @@ export async function fetchSites(organizationId: string): Promise<Site[]> {
   }
 }
 
+// Two seperate NA API calls because of issue NEX-8897; revert after issue is fixed
 export async function fetchTags(siteId: string, includeGeotabInfo: boolean = false): Promise<Tag[]> {
   try {
     const params = new URLSearchParams({
@@ -279,6 +293,46 @@ export async function fetchLocationHistory(
       message: error instanceof Error ? error.message : 'Unknown error'
     });
     throw error;
+  }
+}
+
+export interface SuperTagConfig {
+  stModeLocUpdateRate_Moving?: string;
+  stModeLocUpdateRate_Stationary?: string;
+  stModeHeartbeatInterval?: string;
+  sendOnStopWaitTime_s?: string;
+  gpsOrder?: string;
+  wifiOrder?: string;
+  cellOrder?: string;
+  activeProfile?: string;
+  positionSource?: string;
+}
+
+export async function fetchSuperTagConfig(nodeAddress: string): Promise<SuperTagConfig | null> {
+  try {
+    const response = await network_asset_api.get(`/networkAsset/module/${nodeAddress}`);
+    const props = response.data?.assetInfo?.metadata?.props;
+    
+    if (!props) {
+      return null;
+    }
+
+    return {
+      stModeLocUpdateRate_Moving: props.stModeLocUpdateRate_Moving,
+      stModeLocUpdateRate_Stationary: props.stModeLocUpdateRate_Stationary,
+      stModeHeartbeatInterval: props.stModeHeartbeatInterval,
+      sendOnStopWaitTime_s: props.sendOnStopWaitTime_s,
+      gpsOrder: props.gpsOrder,
+      wifiOrder: props.wifiOrder,
+      cellOrder: props.cellOrder,
+      activeProfile: props.activeProfile,
+      positionSource: props.positionSource,
+    };
+  } catch (error) {
+    console.error('Failed to fetch SuperTag config:', {
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+    return null;
   }
 }
 

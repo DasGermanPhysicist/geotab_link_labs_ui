@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Map } from '../components/Map';
 import { AssetList } from '../components/AssetList';
 import { AssetDetailOverlay } from '../components/AssetDetailOverlay';
 import { Dashboard } from '../components/Dashboard';
 import { QRScanner } from '../components/QRScanner';
+import { SuperTagConfiguration } from '../components/SuperTagConfiguration';
 import { ProcessedMarker } from '../types/assets';
-import { QrCode, ArrowLeft, History } from 'lucide-react';
+import { QrCode, ArrowLeft } from 'lucide-react';
 
 interface AssetTrackersPageProps {
   assets: ProcessedMarker[];
@@ -21,7 +21,6 @@ export function AssetTrackersPage({
   searchTerm,
   onSearchChange
 }: AssetTrackersPageProps) {
-  const navigate = useNavigate();
   const [selectedAsset, setSelectedAsset] = useState<ProcessedMarker | null>(null);
   const [assetViewType, setAssetViewType] = useState<AssetViewType>(() => 
     (localStorage.getItem('assetViewType') as AssetViewType) || 'all'
@@ -37,12 +36,6 @@ export function AssetTrackersPage({
   const handleQRScan = (macAddress: string) => {
     onSearchChange(macAddress);
     setShowQRScanner(false);
-  };
-  
-  const handleViewLocationHistory = () => {
-    if (selectedAsset?.nodeAddress) {
-      navigate(`/location-history/${selectedAsset.nodeAddress}`);
-    }
   };
 
   const mapConfig = {
@@ -79,7 +72,7 @@ export function AssetTrackersPage({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 h-full overflow-y-auto p-6">
           <Dashboard 
             selectedAsset={selectedAsset}
             markers={assets}
@@ -87,16 +80,10 @@ export function AssetTrackersPage({
             onAssetSelect={handleAssetSelect}
           />
           
-          {/* Location History Button (Desktop) */}
+          {/* SuperTag Configuration (Desktop) */}
           {selectedAsset && (
             <div className="mt-6">
-              <button
-                onClick={handleViewLocationHistory}
-                className="flex items-center gap-2 px-4 py-2 bg-[#87B812] text-white rounded-lg hover:bg-[#769f10] transition-colors"
-              >
-                <History className="w-5 h-5" />
-                <span>View Location History</span>
-              </button>
+              <SuperTagConfiguration asset={selectedAsset} />
             </div>
           )}
         </div>
