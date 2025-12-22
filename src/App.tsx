@@ -23,6 +23,7 @@ function App() {
   const [geotabInfo, setGeotabInfo] = useState<Tag[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLeashedChecked, setIsLeashedChecked] = useState(true);
 
   // Load tag data
   const loadTags = useCallback(async () => {
@@ -126,7 +127,7 @@ function App() {
       }
       
       // Check leashed SuperTag name
-      if (asset.leashedToSuperTag && asset.leashedToSuperTag.toLowerCase().includes(lowercaseSearchTerm)) {
+      if (asset.leashedToSuperTag && asset.leashedToSuperTag.toLowerCase().includes(lowercaseSearchTerm) && isLeashedChecked) {
         return true;
       }
 
@@ -137,7 +138,7 @@ function App() {
       
       return false;
     });
-  }, [processedMarkers, searchTerm]);
+  }, [processedMarkers, searchTerm, isLeashedChecked]);
 
   const handleLogin = () => {
     setAuthenticated(true);
@@ -173,6 +174,8 @@ function App() {
                 <AssetTrackersPage
                   assets={filteredAssets}
                   searchTerm={searchTerm}
+                  isLeashedChecked={isLeashedChecked}
+                  onLeashedChange={setIsLeashedChecked}
                   onSearchChange={setSearchTerm}
                 />
               } 
